@@ -68,7 +68,6 @@ import numpy as np
 import pandas as pd
 # import sklearn
 import matplotlib.pyplot as plt
-import seaborn
 import seaborn as sns
 
 #%%
@@ -113,6 +112,7 @@ df['no_loan'] = df[df.iloc[:,18:79] == 'X'].count(axis = 1)
 dfs = df.iloc[:, np.r_[0:18, 79:87]]
 dfs.head(3)
 # %%
+dfs.to_csv('subset.csv')
 #%%
 # Check the data type of each column. 
 dfs.iloc[:,0:26].info(verbose=True)
@@ -132,6 +132,27 @@ print("Summary of Numeric Varible")
 df_nu = dfs.select_dtypes([np.number]) 
 df_nu.apply(var_summary).T
 # Everything looks fine. 
+
 #%%
 # Delete this when you start coding and analyzing:
 # I have set up the data set, along with the summary of all the variables. We need some plots of the data for visulization next. 
+
+#%%
+# Make sum of the total loan based on subset of dataframe, easier for visualization
+df_sub = pd.read_csv('subset.csv')
+df_sub['sum_column']= df_sub.iloc[:,20:26].sum(axis=1)
+df_sub.head()
+# higher sum means more days overdue
+
+#%%
+fuzzyincome = df_sub.AMT_INCOME_TOTAL + np.random.normal(0,1, size=len(df_sub.AMT_INCOME_TOTAL))
+debt_sum = df_sub.sum_column + np.random.normal(0,1, size=len(df_sub.sum_column))
+plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
+# sns.boxplot(y="sum_column", x="AMT_INCOME_TOTAL",
+#               color="b",
+#                data=df_sub)
+plt.ylabel('Past due summary')
+plt.xlabel('Annual income')
+plt.show()
+# higher income, less overdue
+# %%
