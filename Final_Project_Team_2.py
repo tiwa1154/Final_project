@@ -69,10 +69,12 @@ import pandas as pd
 # import sklearn
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 #%%
 filepath = os.path.join(os.getcwd())
 app = pd.read_csv(os.path.join(filepath, "application.csv"))
 app.head(n = 3)
+
 #%%
 filepath2 = os.path.join(os.getcwd())
 credit = pd.read_csv(os.path.join(filepath2, "credit.csv"))
@@ -92,6 +94,7 @@ credit_piv.head(n = 3)
 df = pd.merge(app, credit_piv, how="inner", on=["ID", "ID"])
 df.head(3)
 # len(df)
+
 # %%
 # Count number of different status.
 df['pay_off'] = df[df.iloc[:,18:79] == 'C'].count(axis = 1)
