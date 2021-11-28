@@ -145,6 +145,7 @@ df_sub.head()
 # higher sum means more days overdue
 
 #%%
+# total annual income vs. debt overdue period
 fuzzyincome = df_sub.AMT_INCOME_TOTAL + np.random.normal(0,1, size=len(df_sub.AMT_INCOME_TOTAL))
 debt_sum = df_sub.sum_column + np.random.normal(0,1, size=len(df_sub.sum_column))
 plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
@@ -153,6 +154,30 @@ plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
 #                data=df_sub)
 plt.ylabel('Past due summary')
 plt.xlabel('Annual income')
+plt.title('Annual income vs. Debt overdue period ')
 plt.show()
 # higher income, less overdue
+
+# %%
+# marital status vs debt overdue period
+status = df_sub.NAME_FAMILY_STATUS
+plt.plot(status, debt_sum,'o', markersize=3, alpha = 0.1)
+plt.ylabel('Past due period')
+plt.xlabel('Marital status')
+plt.title('Matiral status vs. Debt overdue period')
+plt.show()
+# Married population has a longer debt overdue period compare to other marital status
+
+#%%
+print(df_sub.NAME_INCOME_TYPE.value_counts())
+
+# %%
+# add work type
+sns.scatterplot(x=status, y=debt_sum, hue="NAME_INCOME_TYPE", data=df_sub)
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+plt.ylabel('Past due period')
+plt.xlabel('Marital status')
+plt.title('Matiral status vs. Debt overdue period')
+plt.show()
+# conclusion?
 # %%
