@@ -180,4 +180,13 @@ plt.xlabel('Marital status')
 plt.title('Matiral status vs. Debt overdue period')
 plt.show()
 # conclusion?
+
+# %%
+# Matiral status vs. No loan period
+no_loan = df_sub.no_loan
+plt.plot(status, no_loan,'o', markersize=3, alpha = 0.1)
+plt.ylabel('Month with no loan')
+plt.xlabel('Marital status')
+plt.title('Matiral status vs. No loan period')
+plt.show()
 # %%
