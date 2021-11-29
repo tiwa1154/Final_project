@@ -199,6 +199,97 @@ plt.show()
 # more people have no kids have longer debt overdue time
 
 # %%
-df_sub.plot(x=kids, y=debt_sum, kind="bar")
+# df_sub.plot(x=kids, y=debt_sum, kind="bar")
+# plt.show()
+
+#%%
+df_sub.NAME_FAMILY_STATUS.value_counts()
+#%%
+def cleandf_subFamilyStatus(row, colname): 
+  thisamt = row[colname]
+  if (thisamt == "Married"): return "1"
+  if (thisamt == "Single / not married"): return "2"
+  if (thisamt == "Civil marriage"): return "3" 
+  if (thisamt == "Separated"): return "4"
+  if (thisamt == "Widow"): return "5"
+  
+print("\nReady to continue.")
+#%%
+df_sub['NAME_FAMILY_STATUS'] = df_sub.apply(cleandf_subFamilyStatus, colname='NAME_FAMILY_STATUS', axis=1)
+print(df_sub.describe(), '\n', df_sub.NAME_FAMILY_STATUS.value_counts(dropna=False) )
+# print(df.dtypes)
+
+#%%
+def cleandf_subGender(row, colname): 
+  thisamt = row[colname]
+  if (thisamt == "F"): return "1"
+  if (thisamt == "M"): return "2"
+  
+# end function cleanDfhappy
+print("\nReady to continue.")
+
+#%%
+df_sub['CODE_GENDER'] = df_sub.apply(cleandf_subGender, colname='CODE_GENDER', axis=1)
+print(df_sub.describe(), '\n', df_sub.CODE_GENDER.value_counts(dropna=False))
+
+#%%
+# clean income type based on job
+df_sub.NAME_INCOME_TYPE.value_counts()
+def cleandf_subIncomeType(row, colname): 
+  thisamt = row[colname]
+  if (thisamt == "Working"): return "1"
+  if (thisamt == "Commercial associate"): return "2"
+  if (thisamt == "Pensioner"): return "3" 
+  if (thisamt == "State servant"): return "4"
+  if (thisamt == "Student"): return "5"
+  
+print("\nReady to continue.")
+
+#%%
+df_sub['NAME_INCOME_TYPE'] = df_sub.apply(cleandf_subIncomeType, colname='NAME_INCOME_TYPE', axis=1)
+print(df_sub.describe(), '\n', df_sub.NAME_INCOME_TYPE.value_counts(dropna=False))
+
+#%%
+df_sub.NAME_EDUCATION_TYPE.value_counts()
+def cleandf_subEducationType(row, colname): 
+  thisamt = row[colname]
+  if (thisamt == "Secondary / secondary special"): return "1"
+  if (thisamt == "Higher education"): return "2"
+  if (thisamt == "Incomplete higher"): return "3" 
+  if (thisamt == "Lower secondary"): return "4"
+  if (thisamt == "Academic degree"): return "5"
+  
+print("\nReady to continue.")
+
+#%%
+df_sub['NAME_EDUCATION_TYPE'] = df_sub.apply(cleandf_subEducationType, colname='NAME_EDUCATION_TYPE', axis=1)
+print(df_sub.describe(), '\n', df_sub.NAME_EDUCATION_TYPE.value_counts(dropna=False))
+
+#%%
+# clean house type
+df_sub.NAME_HOUSING_TYPE.value_counts()
+def cleandf_subHousingType(row, colname): 
+  thisamt = row[colname]
+  if (thisamt == "House / apartment"): return "1"
+  if (thisamt == "With parents"): return "2"
+  if (thisamt == "Municipal apartment"): return "3" 
+  if (thisamt == "Rented apartment"): return "4"
+  if (thisamt == "Office apartment"): return "5"
+  if (thisamt == "Co-op apartment"): return "6"
+
+#%%
+df_sub['NAME_HOUSING_TYPE'] = df_sub.apply(cleandf_subHousingType, colname='NAME_HOUSING_TYPE', axis=1)
+print(df_sub.describe(), '\n', df_sub.NAME_HOUSING_TYPE.value_counts(dropna=False))
+
+# %%
+xclient = df_sub[['CNT_CHILDREN', 'NAME_FAMILY_STATUS','pay_off','CODE_GENDER','NAME_INCOME_TYPE','NAME_EDUCATION_TYPE', 'NAME_HOUSING_TYPE','DAYS_BIRTH', 'DAYS_EMPLOYED']]
+yclient = df_sub[['sum_column']]
+print(type(xclient))
+print(type(yclient))
+
+# %%
+from pandas.plotting import scatter_matrix
+scatter_matrix(xclient, alpha = 0.2, figsize = (7, 7), diagonal = 'hist')
 plt.show()
+
 # %%
