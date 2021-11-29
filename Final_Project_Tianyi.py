@@ -190,3 +190,15 @@ plt.xlabel('Marital status')
 plt.title('Matiral status vs. No loan period')
 plt.show()
 # %%
+kids = df_sub.CNT_CHILDREN
+plt.plot(kids, debt_sum,'o', markersize=3, alpha = 0.1)
+plt.ylabel('Past due period')
+plt.xlabel('Number of kids')
+plt.title('Matiral status vs. Debt overdue period')
+plt.show()
+# more people have no kids have longer debt overdue time
+
+# %%
+df_sub.plot(x=kids, y=debt_sum, kind="bar")
+plt.show()
+# %%
