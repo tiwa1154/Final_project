@@ -69,6 +69,7 @@ import pandas as pd
 # import sklearn
 import matplotlib.pyplot as plt
 import seaborn as sns
+from seaborn.palettes import color_palette
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, RandomizedSearchCV
 from sklearn.preprocessing import OneHotEncoder
@@ -103,41 +104,42 @@ def data_cleansing(data):
     # Adding number of family members with number of children to get overall family members.
     data['CNT_FAM_MEMBERS'] = data['CNT_FAM_MEMBERS'] + data['CNT_CHILDREN']
     dropped_cols = ['FLAG_MOBIL', 'FLAG_WORK_PHONE', 'FLAG_PHONE',
-       'FLAG_EMAIL','OCCUPATION_TYPE','CNT_CHILDREN']
+       'FLAG_EMAIL']
     data = data.drop(dropped_cols, axis = 1)
 
     data['DAYS_BIRTH'] = np.abs(data['DAYS_BIRTH']/365)
     data['DAYS_EMPLOYED'] = data['DAYS_EMPLOYED']/365 
 
-    # housing_type = {'House / apartment' : 'House / apartment',
-    #                'With parents': 'With parents',
-    #                 'Municipal apartment' : 'House / apartment',
-    #                 'Rented apartment': 'House / apartment',
-    #                 'Office apartment': 'House / apartment',
-    #                 'Co-op apartment': 'House / apartment'}
+    housing_type = {'House / apartment' : 'House / apartment',
+                   'With parents': 'With parents',
+                    'Municipal apartment' : 'House / apartment',
+                    'Rented apartment': 'House / apartment',
+                    'Office apartment': 'House / apartment',
+                    'Co-op apartment': 'House / apartment'}
               
-    # income_type = {'Commercial associate':'Working',
-    #               'State servant':'Working',
-    #               'Working':'Working',
-    #               'Pensioner':'Pensioner',
-    #               'Student':'Student'}
-    # education_type = {'Secondary / secondary special':'secondary',
-    #                  'Lower secondary':'secondary',
-    #                  'Higher education':'Higher education',
-    #                  'Incomplete higher':'Higher education',
-    #                  'Academic degree':'Academic degree'}
-    # family_status = {'Single / not married':'Single',
-    #                  'Separated':'Single',
-    #                  'Widow':'Single',
-    #                  'Civil marriage':'Married',
-    #                 'Married':'Married'}
-    # data['NAME_HOUSING_TYPE'] = data['NAME_HOUSING_TYPE'].map(housing_type)
-    # data['NAME_INCOME_TYPE'] = data['NAME_INCOME_TYPE'].map(income_type)
-    # data['NAME_EDUCATION_TYPE']=data['NAME_EDUCATION_TYPE'].map(education_type)
-    # data['NAME_FAMILY_STATUS']=data['NAME_FAMILY_STATUS'].map(family_status)
+    income_type = {'Commercial associate':'Working',
+                  'State servant':'Working',
+                  'Working':'Working',
+                  'Pensioner':'Pensioner',
+                  'Student':'Student'}
+    education_type = {'Secondary / secondary special':'secondary',
+                     'Lower secondary':'secondary',
+                     'Higher education':'Higher education',
+                     'Incomplete higher':'Higher education',
+                     'Academic degree':'Academic degree'}
+    family_status = {'Single / not married':'Single',
+                     'Separated':'Single',
+                     'Widow':'Single',
+                     'Civil marriage':'Married',
+                    'Married':'Married'}
+    data['NAME_HOUSING_TYPE'] = data['NAME_HOUSING_TYPE'].map(housing_type)
+    data['NAME_INCOME_TYPE'] = data['NAME_INCOME_TYPE'].map(income_type)
+    data['NAME_EDUCATION_TYPE']=data['NAME_EDUCATION_TYPE'].map(education_type)
+    data['NAME_FAMILY_STATUS']=data['NAME_FAMILY_STATUS'].map(family_status)
     return data
 
 cleansed_app = data_cleansing(app)
+
 #%%
 def feature_engineering_target(data):
     good_or_bad = []
@@ -182,14 +184,14 @@ def feature_engineering_target(data):
 # df.head(3)
 
 #%%
-df['pay_off'] = df[df.iloc[:,18:79] == 'C'].count(axis = 1)
-df['overdue_1-29'] = df[df.iloc[:,18:79] == '0'].count(axis = 1)
-df['overdue_30-59'] = df[df.iloc[:,18:79] == '1'].count(axis = 1)
-df['overdue_60-89'] = df[df.iloc[:,18:79] == '2'].count(axis = 1)
-df['overdue_90-119'] = df[df.iloc[:,18:79] == '3'].count(axis = 1)
-df['overdue_120-149'] = df[df.iloc[:,18:79] == '4'].count(axis = 1)
-df['overdue_over_150'] = df[df.iloc[:,18:79] == '5'].count(axis = 1)
-df['no_loan'] = df[df.iloc[:,18:79] == 'X'].count(axis = 1)
+df['pay_off'] = df[df.iloc[:,1:61] == 'C'].count(axis = 1)
+df['overdue_1-29'] = df[df.iloc[:,1:61] == '0'].count(axis = 1)
+df['overdue_30-59'] = df[df.iloc[:,1:61] == '1'].count(axis = 1)
+df['overdue_60-89'] = df[df.iloc[:,1:61] == '2'].count(axis = 1)
+df['overdue_90-119'] = df[df.iloc[:,1:61] == '3'].count(axis = 1)
+df['overdue_120-149'] = df[df.iloc[:,1:61] == '4'].count(axis = 1)
+df['overdue_over_150'] = df[df.iloc[:,1:61] == '5'].count(axis = 1)
+df['no_loan'] = df[df.iloc[:,1:61] == 'X'].count(axis = 1)
 df['ID'] = df.index
 #%%
 df.head(10)
@@ -222,24 +224,49 @@ df_merge.isnull().sum()
 
 #%%
 # Print out list of columns
+df_merge = df_merge.dropna()
+#%%
+df_merge.head(5)
+#%%
 df_merge.columns
 
 #%%
+# finding relationships between target(good/bad) and other features
 df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'no_loan', 'target']]
+       'no_loan', 'target','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'target', diag_kws={'bw': 0.2})
-# observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, 
+
+#%%
+# kids vs features
+df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+       'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
+       'target','CNT_CHILDREN','OCCUPATION_TYPE']]
+# Visualize the data using seaborn Pairplots
+g = sns.pairplot(df_merge2, hue = 'CNT_CHILDREN', diag_kws={'bw': 0.2}, palette = "tab10")
+# observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
+
+#%%
+# occupation type vs features
+df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+       'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
+       'target','CNT_CHILDREN','OCCUPATION_TYPE']]
+# Visualize the data using seaborn Pairplots
+g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
 #%%
 # Investigate all the features by our y
 features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'no_loan']
+       'target','CNT_CHILDREN','OCCUPATION_TYPE']
 
 
 for f in features:
@@ -249,9 +276,10 @@ for f in features:
 
 #%%
 df_merge2.head()
+
 #%%
 # convert catagorical variables to numeric
-numerical_df_merge2 = pd.get_dummies(df_merge2, columns = ['NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'CODE_GENDER','FLAG_OWN_CAR', 'FLAG_OWN_REALTY'])
+numerical_df_merge2 = pd.get_dummies(df_merge2, columns = ['NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'CODE_GENDER','FLAG_OWN_CAR', 'FLAG_OWN_REALTY','OCCUPATION_TYPE'])
 numerical_df_merge2.head()
 
 #%%
@@ -263,8 +291,8 @@ numerical_df_merge2.head()
 
 #%%
 # Split data
-X = numerical_df_merge2.drop('target', axis=1).values
-y = numerical_df_merge2['target'].values 
+X = numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1).values
+y = numerical_df_merge2['#_of_overdues'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -272,7 +300,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 
 #%%
 # Decision tree
-dt = DecisionTreeClassifier(criterion='entropy', random_state=1)
+dt = DecisionTreeClassifier(criterion='entropy', max_depth=3, random_state=1)
 dt.fit(X_train, y_train)
 
 #%%
@@ -280,8 +308,8 @@ from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop('target', axis=1).columns,    
-    class_names=numerical_df_merge2['target'].unique().astype(str),  
+    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1).columns,    
+    class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -289,7 +317,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(numerical_df_merge2.drop('target', axis=1)):
+for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
@@ -337,7 +365,7 @@ plot_confusion_matrix(cm_norm, classes=dt.classes_, title='Training confusion')
 # Random Forest
 
 
-rf = RandomForestClassifier(n_estimators=100, criterion='entropy')
+rf = RandomForestClassifier(n_estimators=25134, criterion='entropy')
 rf.fit(X_train, y_train)
 prediction_test = rf.predict(X=X_test)
 
@@ -399,7 +427,7 @@ plot_confusion_matrix(cm_norm, classes=rf.classes_)
 # # print(classification_report(ytest, y_test_pred))
 # # # %%
 # # # Subset dataframe 
-# # dfs = df.iloc[:, np.r_[0:18, 79:87]]
+# # dfs = df.iloc[:, np.r_[0:1, 61:87]]
 # # dfs.head(10)
 # # test classification dataset
 # from sklearn.datasets import make_classification
