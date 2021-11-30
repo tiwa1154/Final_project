@@ -272,11 +272,12 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 
 #%%
 # Decision tree
-dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
+dt = DecisionTreeClassifier(criterion='entropy', random_state=1)
 dt.fit(X_train, y_train)
 
 #%%
 from sklearn.tree import export_graphviz
+import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
     feature_names=numerical_df_merge2.drop('target', axis=1).columns,    
@@ -287,6 +288,92 @@ graph = graphviz.Source(dot_data)
 graph
 
 #%%
+# Calculating FI
+for i, column in enumerate(numerical_df_merge2.drop('target', axis=1)):
+    print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
+    
+    fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
+    
+    try:
+        final_fi = pd.concat([final_fi,fi], ignore_index = True)
+    except:
+        final_fi = fi
+        
+        
+# Ordering the data
+final_fi = final_fi.sort_values('Feature Importance Score', ascending = False).reset_index()            
+final_fi
+# the only features effect the score are # of overdues, pay_off, NAME_FAMILY_STATUS_Widow, FLAG_OWN_CAR_N, no_loan, AMT_INCOME_TOTAL
+#%%
+# Accuracy on Train
+print("Training Accuracy is: ", dt.score(X_train, y_train))
+
+# Accuracy on Train
+print("Testing Accuracy is: ", dt.score(X_test, y_test))
+
+#%%
+# Confusion Matrix function
+
+def plot_confusion_matrix(cm, classes=None, title='Confusion matrix'):
+    """Plots a confusion matrix."""
+    if classes is not None:
+        sns.heatmap(cm, xticklabels=classes, yticklabels=classes, vmin=0., vmax=1., annot=True, annot_kws={'size':50})
+    else:
+        sns.heatmap(cm, vmin=0., vmax=1.)
+    plt.title(title)
+    plt.ylabel('True label')
+    plt.xlabel('Predicted label')
+
+y_pred = dt.predict(X_train)
+
+#%%
+# Plotting Confusion Matrix
+cm = confusion_matrix(y_train, y_pred)
+cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
+plt.figure()
+plot_confusion_matrix(cm_norm, classes=dt.classes_, title='Training confusion')
+
+#%%
+# Random Forest
+
+
+rf = RandomForestClassifier(n_estimators=100, criterion='entropy')
+rf.fit(X_train, y_train)
+prediction_test = rf.predict(X=X_test)
+
+# source: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+
+# Accuracy on Test
+print("Training Accuracy is: ", rf.score(X_train, y_train))
+# Accuracy on Train
+print("Testing Accuracy is: ", rf.score(X_test, y_test))
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, prediction_test)
+cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
+plt.figure()
+plot_confusion_matrix(cm_norm, classes=rf.classes_)
+
+#%%
+
+
+rf = RandomForestClassifier(n_estimators=100, criterion='entropy')
+rf.fit(X_train, y_train)
+prediction_test = rf.predict(X=X_test)
+
+# source: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
+
+# Accuracy on Test
+print("Training Accuracy is: ", rf.score(X_train, y_train))
+# Accuracy on Train
+print("Testing Accuracy is: ", rf.score(X_test, y_test))
+
+# Confusion Matrix
+cm = confusion_matrix(y_test, prediction_test)
+cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
+plt.figure()
+plot_confusion_matrix(cm_norm, classes=rf.classes_)
+
 
 #%%
 # xtarget = df_merge[df_merge.drop('target',axis = 1).columns]
@@ -294,101 +381,101 @@ graph
 # xtrain, xtest, ytrain, ytest = train_test_split(xtarget,ytarget, train_size = 0.8,stratify=ytarget, random_state = 0)
 
 #%%
-from sklearn.tree import DecisionTreeClassifier
-# Import train_test_split
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix 
-from sklearn.metrics import classification_report
-# Instantiate dtree
-# dtree_admit1 = DecisionTreeClassifier(max_depth=2, random_state=1)
-# # Fit dt to the training set
-# dtree_admit1.fit(xtrain,ytrain)
-# # Predict test set labels
-# y_test_pred = dtree_admit1.predict(xtest)
-# # Evaluate test-set accuracy
-# print(accuracy_score(ytest, y_test_pred))
-# print(confusion_matrix(ytest, y_test_pred))
-# print(classification_report(ytest, y_test_pred))
+# from sklearn.tree import DecisionTreeClassifier
+# # Import train_test_split
+# from sklearn.model_selection import train_test_split
+# from sklearn.metrics import accuracy_score
+# from sklearn.metrics import confusion_matrix 
+# from sklearn.metrics import classification_report
+# # Instantiate dtree
+# # dtree_admit1 = DecisionTreeClassifier(max_depth=2, random_state=1)
+# # # Fit dt to the training set
+# # dtree_admit1.fit(xtrain,ytrain)
+# # # Predict test set labels
+# # y_test_pred = dtree_admit1.predict(xtest)
+# # # Evaluate test-set accuracy
+# # print(accuracy_score(ytest, y_test_pred))
+# # print(confusion_matrix(ytest, y_test_pred))
+# # print(classification_report(ytest, y_test_pred))
+# # # %%
+# # # Subset dataframe 
+# # dfs = df.iloc[:, np.r_[0:18, 79:87]]
+# # dfs.head(10)
+# # test classification dataset
+# from sklearn.datasets import make_classification
+# # define dataset
+# X, y = make_classification(n_samples=36457, n_features=20, n_informative=8, n_redundant=5, random_state=3)
+# # summarize the dataset
+# print(X.shape, y.shape)
+
+# #%%
+# from numpy import mean
+# from numpy import std
+# from sklearn.model_selection import cross_val_score
+# from sklearn.model_selection import RepeatedStratifiedKFold
+# # define the model
+# model = RandomForestClassifier()
+# # evaluate the model
+# cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+# n_scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
+# # report performance
+# print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
+# # # Check the data type of each column. 
+# # dfs.iloc[:,0:26].info(verbose=True)
+
+# #%%
+# def get_dataset():
+# 	X, y = make_classification(n_samples=36457, n_features=20, n_informative=8, n_redundant=5, random_state=3)
+# 	return X, y
+ 
+# # get a list of models to evaluate
+# def get_models():
+# 	models = dict()
+# 	# explore number of features from 1 to 7
+# 	for i in range(1,8):
+# 		models[str(i)] = RandomForestClassifier(max_features=i)
+# 	return models
+ 
+# # evaluate a given model using cross-validation
+# def evaluate_model(model, X, y):
+# 	# define the evaluation procedure
+# 	cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
+# 	# evaluate the model and collect the results
+# 	scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
+# 	return scores
+ 
+# # define dataset
+# X, y = get_dataset()
+# # get the models to evaluate
+# models = get_models()
+# # evaluate the models and store results
+# results, names = list(), list()
+# for name, model in models.items():
+# 	# evaluate the model
+# 	scores = evaluate_model(model, X, y)
+# 	# store the results
+# 	results.append(scores)
+# 	names.append(name)
+# 	# summarize the performance along the way
+# 	print('>%s %.3f (%.3f)' % (name, mean(scores), std(scores)))
+# # plot model performance for comparison
+# plt.boxplot(results, labels=names, showmeans=True)
+# plt.show()
 # # %%
-# # Subset dataframe 
-# dfs = df.iloc[:, np.r_[0:18, 79:87]]
-# dfs.head(10)
-# test classification dataset
-from sklearn.datasets import make_classification
-# define dataset
-X, y = make_classification(n_samples=36457, n_features=20, n_informative=8, n_redundant=5, random_state=3)
-# summarize the dataset
-print(X.shape, y.shape)
-
-#%%
-from numpy import mean
-from numpy import std
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import RepeatedStratifiedKFold
-# define the model
-model = RandomForestClassifier()
-# evaluate the model
-cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-n_scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1, error_score='raise')
-# report performance
-print('Accuracy: %.3f (%.3f)' % (mean(n_scores), std(n_scores)))
-# # Check the data type of each column. 
-# dfs.iloc[:,0:26].info(verbose=True)
-
-#%%
-def get_dataset():
-	X, y = make_classification(n_samples=36457, n_features=20, n_informative=8, n_redundant=5, random_state=3)
-	return X, y
- 
-# get a list of models to evaluate
-def get_models():
-	models = dict()
-	# explore number of features from 1 to 7
-	for i in range(1,8):
-		models[str(i)] = RandomForestClassifier(max_features=i)
-	return models
- 
-# evaluate a given model using cross-validation
-def evaluate_model(model, X, y):
-	# define the evaluation procedure
-	cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=3, random_state=1)
-	# evaluate the model and collect the results
-	scores = cross_val_score(model, X, y, scoring='accuracy', cv=cv, n_jobs=-1)
-	return scores
- 
-# define dataset
-X, y = get_dataset()
-# get the models to evaluate
-models = get_models()
-# evaluate the models and store results
-results, names = list(), list()
-for name, model in models.items():
-	# evaluate the model
-	scores = evaluate_model(model, X, y)
-	# store the results
-	results.append(scores)
-	names.append(name)
-	# summarize the performance along the way
-	print('>%s %.3f (%.3f)' % (name, mean(scores), std(scores)))
-# plot model performance for comparison
-plt.boxplot(results, labels=names, showmeans=True)
-plt.show()
-# %%
-# Write a summary function to have a glance of the numeric part
-# of the data set
-def var_summary(x):
-    return pd.Series([x.count(), x.isnull().sum(), x.sum(), x.mean(), x.median(), x.std(), x.var(), x.min(), 
-        x.quantile(0.01), x.quantile(0.05), x.quantile(0.10),x.quantile(0.25),x.quantile(0.50),x.quantile(0.75), 
-                              x.quantile(0.90),x.quantile(0.95), x.quantile(0.99),x.max()], 
+# # Write a summary function to have a glance of the numeric part
+# # of the data set
+# def var_summary(x):
+#     return pd.Series([x.count(), x.isnull().sum(), x.sum(), x.mean(), x.median(), x.std(), x.var(), x.min(), 
+#         x.quantile(0.01), x.quantile(0.05), x.quantile(0.10),x.quantile(0.25),x.quantile(0.50),x.quantile(0.75), 
+#                               x.quantile(0.90),x.quantile(0.95), x.quantile(0.99),x.max()], 
                      
-                  index = ['N', 'NMISS', 'SUM', 'MEAN','MEDIAN', 'STD', 'VAR', 'MIN', 'P1', 
-                               'P5' ,'P10' ,'P25' ,'P50' ,'P75' ,'P90' ,'P95' ,'P99' ,'MAX'])
-#%%
-# Select the numeric variables from app. 
-print("Summary of Numeric Varible")
-df_nu = df_merge.select_dtypes([np.number]) 
-df_nu.apply(var_summary).T
+#                   index = ['N', 'NMISS', 'SUM', 'MEAN','MEDIAN', 'STD', 'VAR', 'MIN', 'P1', 
+#                                'P5' ,'P10' ,'P25' ,'P50' ,'P75' ,'P90' ,'P95' ,'P99' ,'MAX'])
+# #%%
+# # Select the numeric variables from app. 
+# print("Summary of Numeric Varible")
+# df_nu = df_merge.select_dtypes([np.number]) 
+# df_nu.apply(var_summary).T
 # Everything looks fine. 
 
 #%%
@@ -402,194 +489,115 @@ df_nu.apply(var_summary).T
 # df_sub.head()
 # higher sum means more days overdue
 
-#%%
-df_sub.groupby('OCCUPATION_TYPE')['OCCUPATION_TYPE'].count()
-
-#%%
-df_sub_null = df_sub.dropna(axis=0)
-df_sub_null.isnull().any()
+# #%%
+# df_sub.groupby('OCCUPATION_TYPE')['OCCUPATION_TYPE'].count()
 
 # #%%
-# df_sub_clean['FLAG_OWN_CAR'] = pd.factorize(df_sub_clean['FLAG_OWN_CAR'])[0]
-# df_sub_clean['FLAG_OWN_REALTY'] = pd.factorize(df_sub_clean['FLAG_OWN_REALTY'])[0]
-# df_sub_clean['NAME_INCOME_TYPE'] = pd.factorize(df_sub_clean['NAME_INCOME_TYPE'])[0]
-# df_sub_clean['NAME_EDUCATION_TYPE'] = pd.factorize(df_sub_clean['NAME_EDUCATION_TYPE'])[0]
-# df_sub_clean['NAME_FAMILY_STATUS'] = pd.factorize(df_sub_clean['NAME_FAMILY_STATUS'])[0]
-# df_sub_clean['NAME_HOUSING_TYPE'] = pd.factorize(df_sub_clean['NAME_HOUSING_TYPE'])[0]
-# df_sub_clean['OCCUPATION_TYPE'] = pd.factorize(df_sub_clean['OCCUPATION_TYPE'])[0]
-# df_sub_clean.dtypes
+# df_sub_null = df_sub.dropna(axis=0)
+# df_sub_null.isnull().any()
 
-#%%
-# total annual income vs. debt overdue period
-fuzzyincome = df_sub.AMT_INCOME_TOTAL + np.random.normal(0,1, size=len(df_sub.AMT_INCOME_TOTAL))
-debt_sum = df_sub.sum_column + np.random.normal(0,1, size=len(df_sub.sum_column))
-plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
-# sns.boxplot(y="sum_column", x="AMT_INCOME_TOTAL",
-#               color="b",
-#                data=df_sub)
-plt.ylabel('Past due summary')
-plt.xlabel('Annual income')
-plt.title('Annual income vs. Debt overdue period ')
-plt.show()
-# higher income, less overdue
+# # #%%
+# # df_sub_clean['FLAG_OWN_CAR'] = pd.factorize(df_sub_clean['FLAG_OWN_CAR'])[0]
+# # df_sub_clean['FLAG_OWN_REALTY'] = pd.factorize(df_sub_clean['FLAG_OWN_REALTY'])[0]
+# # df_sub_clean['NAME_INCOME_TYPE'] = pd.factorize(df_sub_clean['NAME_INCOME_TYPE'])[0]
+# # df_sub_clean['NAME_EDUCATION_TYPE'] = pd.factorize(df_sub_clean['NAME_EDUCATION_TYPE'])[0]
+# # df_sub_clean['NAME_FAMILY_STATUS'] = pd.factorize(df_sub_clean['NAME_FAMILY_STATUS'])[0]
+# # df_sub_clean['NAME_HOUSING_TYPE'] = pd.factorize(df_sub_clean['NAME_HOUSING_TYPE'])[0]
+# # df_sub_clean['OCCUPATION_TYPE'] = pd.factorize(df_sub_clean['OCCUPATION_TYPE'])[0]
+# # df_sub_clean.dtypes
 
-# %%
-# marital status vs debt overdue period
-status = df_sub.NAME_FAMILY_STATUS
-plt.plot(status, debt_sum,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Past due period')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# Married population has a longer debt overdue period compare to other marital status
-
-#%%
-print(df_sub.NAME_INCOME_TYPE.value_counts())
-
-# %%
-# add work type
-sns.scatterplot(x=status, y=debt_sum, hue="NAME_INCOME_TYPE", data=df_sub)
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.ylabel('Past due period')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# conclusion?
-
-# %%
-# Matiral status vs. No loan period
-no_loan = df_sub.no_loan
-plt.plot(status, no_loan,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Month with no loan')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. No loan period')
-plt.show()
-# %%
-kids = df_sub.CNT_CHILDREN
-plt.plot(kids, debt_sum,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Past due period')
-plt.xlabel('Number of kids')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# more people have no kids have longer debt overdue time
-
-# %%
-# df_sub.plot(x=kids, y=debt_sum, kind="bar")
+# #%%
+# # total annual income vs. debt overdue period
+# fuzzyincome = df_sub.AMT_INCOME_TOTAL + np.random.normal(0,1, size=len(df_sub.AMT_INCOME_TOTAL))
+# debt_sum = df_sub.sum_column + np.random.normal(0,1, size=len(df_sub.sum_column))
+# plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
+# # sns.boxplot(y="sum_column", x="AMT_INCOME_TOTAL",
+# #               color="b",
+# #                data=df_sub)
+# plt.ylabel('Past due summary')
+# plt.xlabel('Annual income')
+# plt.title('Annual income vs. Debt overdue period ')
 # plt.show()
+# # higher income, less overdue
+
+# # %%
+# # marital status vs debt overdue period
+# status = df_sub.NAME_FAMILY_STATUS
+# plt.plot(status, debt_sum,'o', markersize=3, alpha = 0.1)
+# plt.ylabel('Past due period')
+# plt.xlabel('Marital status')
+# plt.title('Matiral status vs. Debt overdue period')
+# plt.show()
+# # Married population has a longer debt overdue period compare to other marital status
+
+# #%%
+# print(df_sub.NAME_INCOME_TYPE.value_counts())
+
+# # %%
+# # add work type
+# sns.scatterplot(x=status, y=debt_sum, hue="NAME_INCOME_TYPE", data=df_sub)
+# plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+# plt.ylabel('Past due period')
+# plt.xlabel('Marital status')
+# plt.title('Matiral status vs. Debt overdue period')
+# plt.show()
+# # conclusion?
+
+# # %%
+# # Matiral status vs. No loan period
+# no_loan = df_sub.no_loan
+# plt.plot(status, no_loan,'o', markersize=3, alpha = 0.1)
+# plt.ylabel('Month with no loan')
+# plt.xlabel('Marital status')
+# plt.title('Matiral status vs. No loan period')
+# plt.show()
+# # %%
+# kids = df_sub.CNT_CHILDREN
+# plt.plot(kids, debt_sum,'o', markersize=3, alpha = 0.1)
+# plt.ylabel('Past due period')
+# plt.xlabel('Number of kids')
+# plt.title('Matiral status vs. Debt overdue period')
+# plt.show()
+# # more people have no kids have longer debt overdue time
+
+# # %%
+# # df_sub.plot(x=kids, y=debt_sum, kind="bar")
+# # plt.show()
 
 
-#%%
-cleansed_df_sub = data_cleansing(df_sub)
+# #%%
+# cleansed_df_sub = data_cleansing(df_sub)
 
-#%%
-df_sub.NAME_FAMILY_STATUS.value_counts()
-#%%
-def cleandf_subFamilyStatus(row, colname): 
-  thisamt = row[colname]
-  if (thisamt == "Married"): return "1"
-  if (thisamt == "Single / not married"): return "2"
-  if (thisamt == "Civil marriage"): return "3" 
-  if (thisamt == "Separated"): return "4"
-  if (thisamt == "Widow"): return "5"
+# #%%
+# df_sub.NAME_FAMILY_STATUS.value_counts()
+# #%%
+# def cleandf_subFamilyStatus(row, colname): 
+#   thisamt = row[colname]
+#   if (thisamt == "Married"): return "1"
+#   if (thisamt == "Single / not married"): return "2"
+#   if (thisamt == "Civil marriage"): return "3" 
+#   if (thisamt == "Separated"): return "4"
+#   if (thisamt == "Widow"): return "5"
   
-print("\nReady to continue.")
+# print("\nReady to continue.")
 #%%
-df_sub['NAME_FAMILY_STATUS'] = df_sub.apply(cleandf_subFamilyStatus, colname='NAME_FAMILY_STATUS', axis=1)
-print(df_sub.describe(), '\n', df_sub.NAME_FAMILY_STATUS.value_counts(dropna=False) )
-# print(df.dtypes)
 
-#%%
-def cleandf_subGender(row, colname): 
-  thisamt = row[colname]
-  if (thisamt == "F"): return "1"
-  if (thisamt == "M"): return "2"
-  
-# end function cleanDfhappy
-print("\nReady to continue.")
 
-#%%
-df_sub['CODE_GENDER'] = df_sub.apply(cleandf_subGender, colname='CODE_GENDER', axis=1)
-print(df_sub.describe(), '\n', df_sub.CODE_GENDER.value_counts(dropna=False))
 
-#%%
-# clean income type based on job
-df_sub.NAME_INCOME_TYPE.value_counts()
-def cleandf_subIncomeType(row, colname): 
-  thisamt = row[colname]
-  if (thisamt == "Working"): return "1"
-  if (thisamt == "Commercial associate"): return "2"
-  if (thisamt == "Pensioner"): return "3" 
-  if (thisamt == "State servant"): return "4"
-  if (thisamt == "Student"): return "5"
-  
-print("\nReady to continue.")
-
-#%%
-df_sub['NAME_INCOME_TYPE'] = df_sub.apply(cleandf_subIncomeType, colname='NAME_INCOME_TYPE', axis=1)
-print(df_sub.describe(), '\n', df_sub.NAME_INCOME_TYPE.value_counts(dropna=False))
-
-#%%
-df_sub.NAME_EDUCATION_TYPE.value_counts()
-def cleandf_subEducationType(row, colname): 
-  thisamt = row[colname]
-  if (thisamt == "Secondary / secondary special"): return "1"
-  if (thisamt == "Higher education"): return "2"
-  if (thisamt == "Incomplete higher"): return "3" 
-  if (thisamt == "Lower secondary"): return "4"
-  if (thisamt == "Academic degree"): return "5"
-  
-print("\nReady to continue.")
-
-#%%
-df_sub['NAME_EDUCATION_TYPE'] = df_sub.apply(cleandf_subEducationType, colname='NAME_EDUCATION_TYPE', axis=1)
-print(df_sub.describe(), '\n', df_sub.NAME_EDUCATION_TYPE.value_counts(dropna=False))
-
-#%%
-# clean house type
-df_sub.NAME_HOUSING_TYPE.value_counts()
-def cleandf_subHousingType(row, colname): 
-  thisamt = row[colname]
-  if (thisamt == "House / apartment"): return "1"
-  if (thisamt == "With parents"): return "2"
-  if (thisamt == "Municipal apartment"): return "3" 
-  if (thisamt == "Rented apartment"): return "4"
-  if (thisamt == "Office apartment"): return "5"
-  if (thisamt == "Co-op apartment"): return "6"
-
-#%%
-df_sub['NAME_HOUSING_TYPE'] = df_sub.apply(cleandf_subHousingType, colname='NAME_HOUSING_TYPE', axis=1)
-print(df_sub.describe(), '\n', df_sub.NAME_HOUSING_TYPE.value_counts(dropna=False))
-
-# %%
-xclient = df_sub[['CNT_CHILDREN', 'NAME_FAMILY_STATUS','pay_off','CODE_GENDER','NAME_INCOME_TYPE','NAME_EDUCATION_TYPE', 'NAME_HOUSING_TYPE','DAYS_BIRTH', 'DAYS_EMPLOYED']]
-yclient = df_sub[['sum_column']]
-print(type(xclient))
-print(type(yclient))
-
-# %%
-from pandas.plotting import scatter_matrix
-scatter_matrix(xclient, alpha = 0.2, figsize = (7, 7), diagonal = 'hist')
-plt.show()
-
-# %%
-# clustering
-from numpy import where
-from sklearn.datasets import make_classification
-from matplotlib import pyplot
-# define dataset
-X, y = make_classification(n_samples=36457, n_subdf_sub=9, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=10)
-# create scatter plot for samples from each class
-for class_value in range(2):
-	# get row indexes for samples with this class
-	row_ix = where(y == class_value)
-	# create scatter of these samples
-	pyplot.scatter(X[row_ix, 0], X[row_ix, 1])
-# show the plot
-pyplot.show()
-# %%
-x = df[df.drop('target', axis = 1).columns]
-y = df['target']
-xtrain, xtest, ytrain, ytest = train_test_split(x,y, train_size = 0.8, random_state = 0)
-
+# # %%
+# # clustering
+# from numpy import where
+# from sklearn.datasets import make_classification
+# from matplotlib import pyplot
+# # define dataset
+# X, y = make_classification(n_samples=36457, n_subnumerical_df_merge2=9, n_informative=2, n_redundant=0, n_clusters_per_class=1, random_state=10)
+# # create scatter plot for samples from each class
+# for class_value in range(2):
+# 	# get row indexes for samples with this class
+# 	row_ix = where(y == class_value)
+# 	# create scatter of these samples
+# 	pyplot.scatter(X[row_ix, 0], X[row_ix, 1])
+# # show the plot
+# pyplot.show()
 
 # %%
