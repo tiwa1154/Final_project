@@ -208,12 +208,20 @@ df_merge.head(10)
 df_merge.describe()
 
 #%%
+df_merge.O
+
+#%%
+df_merge = df_merge.dropna()
+
+#%%
+df_merge.head(5)
+#%%
 # Investigate all the elements whithin each Feature 
 
 for column in df_merge:
     unique_vals = np.unique(df_merge[column])
     nr_values = len(unique_vals)
-    if nr_values < 12:
+    if nr_values < 20:
         print('The number of values for feature {} :{} -- {}'.format(column, nr_values,unique_vals))
     else:
         print('The number of values for feature {} :{}'.format(column, nr_values))
@@ -222,11 +230,6 @@ for column in df_merge:
 # Checking for null values
 df_merge.isnull().sum()
 
-#%%
-# Print out list of columns
-df_merge = df_merge.dropna()
-#%%
-df_merge.head(5)
 #%%
 df_merge.columns
 
@@ -239,17 +242,17 @@ df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'no_loan', 'target','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'target', diag_kws={'bw': 0.2})
-
+# observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
 #%%
 # kids vs features
 df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'target','CNT_CHILDREN','OCCUPATION_TYPE']]
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', '#_of_overdues',
+       'CNT_CHILDREN','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge2, hue = 'CNT_CHILDREN', diag_kws={'bw': 0.2}, palette = "tab10")
-# observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
+g = sns.pairplot(df_merge2, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
+
 
 #%%
 # occupation type vs features
@@ -291,7 +294,7 @@ numerical_df_merge2.head()
 
 #%%
 # Split data
-X = numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1).values
+X = numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1).values
 y = numerical_df_merge2['#_of_overdues'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
@@ -300,7 +303,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 
 #%%
 # Decision tree
-dt = DecisionTreeClassifier(criterion='entropy', max_depth=3, random_state=1)
+dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
 dt.fit(X_train, y_train)
 
 #%%
@@ -308,7 +311,7 @@ from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1).columns,    
+    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1).columns,    
     class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
@@ -317,7 +320,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target','no_loan'], axis=1)):
+for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
@@ -332,6 +335,60 @@ for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 
 final_fi = final_fi.sort_values('Feature Importance Score', ascending = False).reset_index()            
 final_fi
 # the only features effect the score are # of overdues, pay_off, NAME_FAMILY_STATUS_Widow, FLAG_OWN_CAR_N, no_loan, AMT_INCOME_TOTAL
+
+#%%
+# Split data
+X = numerical_df_merge2.drop(['#_of_overdues','pay_off','target', 'no_loan'], axis=1).values
+y = numerical_df_merge2['#_of_overdues'].values 
+print('X shape: {}'.format(np.shape(X)))
+print('y shape: {}'.format(np.shape(y)))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
+
+#%%
+# Decision tree
+dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
+dt.fit(X_train, y_train)
+
+#%%
+# if drop target column, #_of_overdues is based on age and emplyment period most heavily.
+from sklearn.tree import export_graphviz
+import graphviz
+
+dot_data = tree.export_graphviz(dt, out_file=None, 
+    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target', 'no_loan'], axis=1).columns,    
+    class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
+    filled=True, rounded=True,  
+    special_characters=True)
+graph = graphviz.Source(dot_data)
+graph
+
+#%%
+# Split data
+X = numerical_df_merge2.drop('target', axis=1).values
+y = numerical_df_merge2['target'].values 
+print('X shape: {}'.format(np.shape(X)))
+print('y shape: {}'.format(np.shape(y)))
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
+
+#%%
+# Decision tree
+dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
+dt.fit(X_train, y_train)
+
+#%%
+# if drop target column, #_of_overdues is based on age and emplyment period most heavily.
+from sklearn.tree import export_graphviz
+import graphviz
+
+dot_data = tree.export_graphviz(dt, out_file=None, 
+    feature_names=numerical_df_merge2.drop('target', axis=1).columns,    
+    class_names=numerical_df_merge2['target'].unique().astype(str),  
+    filled=True, rounded=True,  
+    special_characters=True)
+graph = graphviz.Source(dot_data)
+graph
 #%%
 # Accuracy on Train
 print("Training Accuracy is: ", dt.score(X_train, y_train))
