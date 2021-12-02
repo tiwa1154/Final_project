@@ -24,7 +24,7 @@
 # 
 #   2. Most importantly, can we develop customer profiles using clustering based on applicant data in order to predict future account behavior at the end?
 # 
-# * [Data Source](https://www.kaggle.com/rikdifos/credit-card-approval-y_test_pred)
+# * [Data Source](https://www.kaggle.com/rikdifos/credit-card-approval-prediction)
 # 
 # * [GitHub Link](https://github.com/tiwa1154/Final_project)
 
@@ -310,11 +310,13 @@ df_xgb.drop(df_xgb.columns[a], axis = 1, inplace = True)
 df_xgb.head()
 # %%
 # ! pip install xgboost
+from sklearn.tree import export_graphviz 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix 
 from sklearn.metrics import classification_report
 from xgboost import XGBClassifier
+from xgboost import plot_tree
 #%%
 x_xgb = df_xgb.drop(['credit'], axis=1)
 y_xgb = df_xgb['credit']
@@ -337,5 +339,5 @@ print(classification_report(y_test, y_test_pred))
 pd.DataFrame({'Variable':X_train.columns,'Importance':
         xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
 # %%
-# The model is not so good. I will further refine the predictors and response.
-# and try with other models.
+plot_tree(xgb_fit)
+plt.show()
