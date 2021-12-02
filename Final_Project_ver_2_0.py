@@ -24,9 +24,9 @@
 # 
 #   2. Most importantly, can we develop customer profiles using clustering based on applicant data in order to predict future account behavior at the end?
 # 
-# * [Data Source](https://www.kaggle.com/rikdifos/credit-card-approval-prediction)
+# * [Data Source](https://www.kaggle.com/rikdifos/credit-card-approval-y_test_pred)
 # 
-# * [GitHub Link](https://www.kaggle.com/rikdifos/credit-card-approval-prediction)
+# * [GitHub Link](https://github.com/tiwa1154/Final_project)
 
 #%%[markdown]
 # Data Description (Application.csv):
@@ -81,7 +81,7 @@ credit = pd.read_csv(os.path.join(filepath2, "credit.csv"))
 credit.head(n = 3)
 
 #%%
-# Check the discussion here: https://www.kaggle.com/rikdifos/credit-card-approval-prediction/discussion/119320
+# Check the discussion here: https://www.kaggle.com/rikdifos/credit-card-approval-y_test_pred/discussion/119320
 
 # To get the wide table
 credit['status'] = np.where((credit['STATUS'] == '2') | (credit['STATUS'] == '3' )| (credit['STATUS'] == '4' )| (credit['STATUS'] == '5'), 1, 0) # define > 60 days past-due
@@ -112,7 +112,7 @@ df['no_loan'] = df[df.iloc[:,18:79] == 'X'].count(axis = 1)
 dfs = df.iloc[:, np.r_[0:18, 79:87]]
 dfs.head(3)
 # %%
-dfs.to_csv('subset.csv')
+# dfs.to_csv('subset.csv')
 #%%
 # Check the data type of each column. 
 dfs.iloc[:,0:26].info(verbose=True)
@@ -132,14 +132,10 @@ print("Summary of Numeric Varible")
 df_nu = dfs.select_dtypes([np.number]) 
 df_nu.apply(var_summary).T
 # Everything looks fine. 
-
 #%%
-# Delete this when you start coding and analyzing:
-# I have set up the data set, along with the summary of all the variables. We need some plots of the data for visulization next. 
-
+df_sub = dfs.copy()
 #%%
 # Make sum of the total loan based on subset of dataframe, easier for visualization
-df_sub = pd.read_csv('subset.csv')
 df_sub['sum_column']= df_sub.iloc[:,20:26].sum(axis=1)
 df_sub.head()
 # higher sum means more days overdue
@@ -180,4 +176,166 @@ plt.xlabel('Marital status')
 plt.title('Matiral status vs. Debt overdue period')
 plt.show()
 # conclusion?
+#%%
+# There are might be some EDA that still needs to be done.
+# But we'll see. 
+#######################################################
+# The following procedures are for the model building #
+#######################################################
+#%% 
+# df = dfs.copy() 
+# use this to create deep copy of the data frame if other algothrithm
+# needs specific variables. 
+
+#%%
+# Drop the unwanted columns.
+df_xgb = dfs.copy()
+df_xgb = df_xgb.drop(['ID','FLAG_MOBIL', 'FLAG_WORK_PHONE', 
+                      'FLAG_PHONE', 'FLAG_EMAIL',
+                      'OCCUPATION_TYPE','CNT_CHILDREN'], 
+                       axis = 1)
 # %%
+# Convert gender into dummy variables
+# Male = 0    Female = 1
+def gender_convert(GENDER):
+    if GENDER == 'M':
+        return 0
+    else: 
+        return 1
+#%%
+df_xgb["CODE_GENDER"] = df_xgb["CODE_GENDER"].apply(gender_convert)
+# %%
+# Convert N & Y to dummy variables
+def ny_convert(ny):
+    if ny == "N":
+        return 0
+    else:
+        return 1
+# It is possible to combine gender_convert and ny_convert. 
+# But I choose not to.
+#%%
+df_xgb["FLAG_OWN_CAR"] = df_xgb["FLAG_OWN_CAR"].apply(ny_convert)
+df_xgb["FLAG_OWN_REALTY"] = df_xgb["FLAG_OWN_REALTY"].apply(ny_convert)
+#%%
+# For convenience, it is easy to sort marital this way. 
+# No partenership: 0, else 1.
+def marr_convert(m):
+    if m == "Single / not married" or "Separated" or "Widow":
+        return 0
+    else:
+        return 1
+#%%
+df_xgb["NAME_FAMILY_STATUS"] = df_xgb["NAME_FAMILY_STATUS"].apply(ny_convert)
+# %%
+# Same way for housing type
+def house_convert(h):
+    if h == "With parents":
+        return 0
+    else:
+        return 1
+#%%
+df_xgb["NAME_HOUSING_TYPE"] = df_xgb["NAME_HOUSING_TYPE"].apply(house_convert)
+# %%
+def income_convert(income):
+    if income == "Student":
+        return 0
+    elif income == "Pensioner":
+        return 1
+    else:
+        return 2
+#%%
+df_xgb["NAME_INCOME_TYPE"] = df_xgb["NAME_INCOME_TYPE"].apply(income_convert)
+# %%
+def edu_convert(edu):
+    if edu == "Secondary / secondary special" or "Lower secondary":
+        return 0
+    elif edu == "Higher education" or "Incomplete higher":
+        return 1
+    else:
+        return 2
+#%%
+df_xgb["NAME_EDUCATION_TYPE"] = df_xgb["NAME_EDUCATION_TYPE"].apply(edu_convert)
+# %%
+df_xgb.head()
+# Alight, no more characters in df_xgb
+# %%
+# Now, I would like to convert DAYS_BIRTH into their actual age.
+df_xgb[["DAYS_BIRTH"]] = df_xgb[["DAYS_BIRTH"]].apply(lambda x: abs(x)/365, axis = 1)
+# %%
+# Same as DATS_EMPLOYED
+df_xgb[["DAYS_EMPLOYED"]] = df_xgb[["DAYS_EMPLOYED"]].apply(lambda x: abs(x)/365, axis = 1)
+# %%
+# Last one is to deal with the STATUS
+# Get sum of over_due
+df_xgb["sum_overdue"] = (df_xgb["overdue_1-29"] + df_xgb["overdue_30-59"] 
+                         + df_xgb["overdue_60-89"] 
+                         + df_xgb["overdue_90-119"]
+                         + df_xgb["overdue_120-149"]
+                         + df_xgb["overdue_over_150"])
+ 
+                	
+# %%
+# We would like a binary response of good or bad customer as response
+# We define 0: Bad Credit, 1: Good Credit
+# I am not very familiar with credit system. 
+# So, I use this https://www.creditkarma.com/credit-cards/i/late-payments-affect-credit-score 
+# and https://www.investopedia.com/ask/answers/021215/what-good-debt-ratio-and-what-bad-debt-ratio.asp 
+# as a reference.
+# Good Credit: no_load, pay_off, or pay_off > overdue (Since the credit
+# score slowly improved while starting paying on time. )
+# Bad Credit: pay_off <= overdue
+def customer(df):
+    credit = []
+    for i in range(0, len(df)):
+        if df["sum_overdue"][i] == 0: # No Overdue. Well, good.
+            if df["no_loan"][i] >=0 or df["pay_off"][i] >= 0:
+                credit.append(1)
+        elif df["sum_overdue"][i] != 0:
+            if df["pay_off"][i]/df["sum_overdue"][i] >= 1.5: # good
+                credit.append(1)
+            else: # ratio < 1.5 is defined as bad credit
+                credit.append(0)
+        elif df["pay_off"][i] == 0 and df["no_loan"][i] !=0:
+            if df["sum_overdue"][i] >0: # 
+                credit.append(0)
+            else:
+                credit.append(1)
+    df["credit"] = credit
+    return df
+#%%
+df_xgb = customer(df_xgb)
+#%%
+a = [11, 12, 13, 14, 15, 16, 17, 18, 19]
+df_xgb.drop(df_xgb.columns[a], axis = 1, inplace = True)
+df_xgb.head()
+# %%
+# ! pip install xgboost
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import confusion_matrix 
+from sklearn.metrics import classification_report
+from xgboost import XGBClassifier
+#%%
+x_xgb = df_xgb.drop(['credit'], axis=1)
+y_xgb = df_xgb['credit']
+#%%
+X_train, X_test, y_train, y_test= train_test_split(x_xgb, y_xgb, test_size=0.2, stratify=y_xgb,random_state=1)
+#%%
+xgb_fit = XGBClassifier()
+xgb_fit.fit(X_train, y_train)
+print('XGBoost Model Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
+
+y_test_pred = xgb_fit.predict(X_test)
+print('\nConfusion matrix :')
+print(confusion_matrix(y_test, y_test_pred))
+      
+print('\nClassification report:')      
+print(classification_report(y_test, y_test_pred))
+
+# %%
+# Feature importance
+pd.DataFrame({'Variable':X_train.columns,'Importance':
+        xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
+# %%
+# The model is not so good. I will further refine the predictors and response.
+# and try with other models.
