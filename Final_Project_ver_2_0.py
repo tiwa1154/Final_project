@@ -189,10 +189,10 @@ plt.show()
 
 #%%
 # Drop the unwanted columns.
-df_xgb = dfs.copy()
-df_xgb = df_xgb.drop(['ID','FLAG_MOBIL', 'FLAG_WORK_PHONE', 
+df_r = dfs.copy()
+df_r = df_r.drop(['ID','FLAG_MOBIL', 'FLAG_WORK_PHONE', 
                       'FLAG_PHONE', 'FLAG_EMAIL',
-                      'OCCUPATION_TYPE','CNT_CHILDREN'], 
+                      'OCCUPATION_TYPE'], 
                        axis = 1)
 # %%
 # Convert gender into dummy variables
@@ -203,7 +203,7 @@ def gender_convert(GENDER):
     else: 
         return 1
 #%%
-df_xgb["CODE_GENDER"] = df_xgb["CODE_GENDER"].apply(gender_convert)
+df_r["CODE_GENDER"] = df_r["CODE_GENDER"].apply(gender_convert)
 # %%
 # Convert N & Y to dummy variables
 def ny_convert(ny):
@@ -214,8 +214,8 @@ def ny_convert(ny):
 # It is possible to combine gender_convert and ny_convert. 
 # But I choose not to.
 #%%
-df_xgb["FLAG_OWN_CAR"] = df_xgb["FLAG_OWN_CAR"].apply(ny_convert)
-df_xgb["FLAG_OWN_REALTY"] = df_xgb["FLAG_OWN_REALTY"].apply(ny_convert)
+df_r["FLAG_OWN_CAR"] = df_r["FLAG_OWN_CAR"].apply(ny_convert)
+df_r["FLAG_OWN_REALTY"] = df_r["FLAG_OWN_REALTY"].apply(ny_convert)
 #%%
 # For convenience, it is easy to sort marital this way. 
 # No partenership: 0, else 1.
@@ -225,7 +225,7 @@ def marr_convert(m):
     else:
         return 1
 #%%
-df_xgb["NAME_FAMILY_STATUS"] = df_xgb["NAME_FAMILY_STATUS"].apply(ny_convert)
+df_r["NAME_FAMILY_STATUS"] = df_r["NAME_FAMILY_STATUS"].apply(ny_convert)
 # %%
 # Same way for housing type
 def house_convert(h):
@@ -234,7 +234,7 @@ def house_convert(h):
     else:
         return 1
 #%%
-df_xgb["NAME_HOUSING_TYPE"] = df_xgb["NAME_HOUSING_TYPE"].apply(house_convert)
+df_r["NAME_HOUSING_TYPE"] = df_r["NAME_HOUSING_TYPE"].apply(house_convert)
 # %%
 def income_convert(income):
     if income == "Student":
@@ -244,7 +244,7 @@ def income_convert(income):
     else:
         return 2
 #%%
-df_xgb["NAME_INCOME_TYPE"] = df_xgb["NAME_INCOME_TYPE"].apply(income_convert)
+df_r["NAME_INCOME_TYPE"] = df_r["NAME_INCOME_TYPE"].apply(income_convert)
 # %%
 def edu_convert(edu):
     if edu == "Secondary / secondary special" or "Lower secondary":
@@ -254,26 +254,26 @@ def edu_convert(edu):
     else:
         return 2
 #%%
-df_xgb["NAME_EDUCATION_TYPE"] = df_xgb["NAME_EDUCATION_TYPE"].apply(edu_convert)
-# %%
-df_xgb.head()
-# Alight, no more characters in df_xgb
+df_r["NAME_EDUCATION_TYPE"] = df_r["NAME_EDUCATION_TYPE"].apply(edu_convert)
+
 # %%
 # Now, I would like to convert DAYS_BIRTH into their actual age.
-df_xgb[["DAYS_BIRTH"]] = df_xgb[["DAYS_BIRTH"]].apply(lambda x: abs(x)/365, axis = 1)
+df_r[["DAYS_BIRTH"]] = df_r[["DAYS_BIRTH"]].apply(lambda x: abs(x)/365, axis = 1)
 # %%
 # Same as DATS_EMPLOYED
-df_xgb[["DAYS_EMPLOYED"]] = df_xgb[["DAYS_EMPLOYED"]].apply(lambda x: abs(x)/365, axis = 1)
+df_r[["DAYS_EMPLOYED"]] = df_r[["DAYS_EMPLOYED"]].apply(lambda x: abs(x)/365, axis = 1)
 # %%
 # Last one is to deal with the STATUS
 # Get sum of over_due
-df_xgb["sum_overdue"] = (df_xgb["overdue_1-29"] + df_xgb["overdue_30-59"] 
-                         + df_xgb["overdue_60-89"] 
-                         + df_xgb["overdue_90-119"]
-                         + df_xgb["overdue_120-149"]
-                         + df_xgb["overdue_over_150"])
+df_r["sum_overdue"] = (df_r["overdue_1-29"] + df_r["overdue_30-59"] 
+                         + df_r["overdue_60-89"] 
+                         + df_r["overdue_90-119"]
+                         + df_r["overdue_120-149"]
+                         + df_r["overdue_over_150"])
  
-                	
+#%%
+df_r.head()
+# Alight, no more characters in df_r               	
 # %%
 # We would like a binary response of good or bad customer as response
 # We define 0: Bad Credit, 1: Good Credit
@@ -303,14 +303,13 @@ def customer(df):
     df["credit"] = credit
     return df
 #%%
-df_xgb = customer(df_xgb)
+df_m = customer(df_r)
 #%%
 a = [11, 12, 13, 14, 15, 16, 17, 18, 19]
-df_xgb.drop(df_xgb.columns[a], axis = 1, inplace = True)
-df_xgb.head()
+df_m.drop(df_r.columns[a], axis = 1, inplace = True)
+df_m.head()
 # %%
 # ! pip install xgboost
-from sklearn.tree import export_graphviz 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix 
@@ -318,12 +317,12 @@ from sklearn.metrics import classification_report
 from xgboost import XGBClassifier
 from xgboost import plot_tree
 #%%
-x_xgb = df_xgb.drop(['credit'], axis=1)
-y_xgb = df_xgb['credit']
+x = df_m.drop(['credit'], axis=1)
+y = df_m['credit']
 #%%
-X_train, X_test, y_train, y_test= train_test_split(x_xgb, y_xgb, test_size=0.2, stratify=y_xgb,random_state=1)
+X_train, X_test, y_train, y_test= train_test_split(x, y, test_size=0.2, random_state=1)
 #%%
-xgb_fit = XGBClassifier()
+xgb_fit = XGBClassifier(max_depth = 10)
 xgb_fit.fit(X_train, y_train)
 print('XGBoost Model Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
 
@@ -335,9 +334,32 @@ print('\nClassification report:')
 print(classification_report(y_test, y_test_pred))
 
 # %%
-# Feature importance
+# Feature importance (XGBoost)
 pd.DataFrame({'Variable':X_train.columns,'Importance':
         xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
 # %%
-plot_tree(xgb_fit)
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
+fig, ax = plt.subplots(figsize=(200, 250))
+plot_tree(xgb_fit, ax=ax, rankdir='LR')
 plt.show()
+# %%
+# Logistic Regression Model
+from sklearn.linear_model import LogisticRegression
+lr_fit = LogisticRegression()
+lr_fit.fit(X_train,y_train)
+#%%
+print('Logistic Regression Model Accuracy : ', lr_fit.score(X_test, y_test)*100, '%')
+
+y_test_pred2 = lr_fit.predict(X_test)
+print('\nConfusion matrix :')
+print(confusion_matrix(y_test, y_test_pred2))
+      
+print('\nClassification report:')      
+print(classification_report(y_test, y_test_pred2))
+#%%
+# ! pip install scikit-plot
+import scikitplot as skplt
+y_pred_proba = lr_fit.predict_proba(X_test)
+skplt.metrics.plot_roc_curve(y_test, y_pred_proba)
+plt.show()
+# %%
