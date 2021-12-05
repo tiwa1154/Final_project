@@ -664,7 +664,6 @@ plot_confusion_matrix(cm_norm, classes=rf.classes_)
 #   if (thisamt == "Separated"): return "4"
 #   if (thisamt == "Widow"): return "5"
   
-# print("\nReady to continue.")
 #%%
 
 
