@@ -141,7 +141,7 @@ def data_cleansing(data):
 cleansed_app = data_cleansing(app)
 
 #%%
-def feature_engineering_target(data):
+def feature_engineering_good(1) or bad(0)(data):
     good_or_bad = []
     for index, row in data.iterrows():
         paid_off = row['pay_off']
@@ -175,7 +175,7 @@ def feature_engineering_target(data):
                 
         
     return good_or_bad
-# target set to 1 is good client b/c the gap between # of overdues and payoff or no loan is significant, otherwise, target == 0
+# good(1) or bad(0) set to 1 is good client b/c the gap between # of overdues and payoff or no loan is significant, otherwise, good(1) or bad(0) == 0
 
 #%%
 
@@ -197,18 +197,15 @@ df['ID'] = df.index
 df.head(10)
 
 #%%
-target = pd.DataFrame()
-target['ID'] = df.index
-target['pay_off'] = df['pay_off'].values
-target['#_of_overdues'] = df['overdue_1-29'].values+ df['overdue_30-59'].values + df['overdue_60-89'].values +df['overdue_90-119'].values+df['overdue_120-149'].values +df['overdue_over_150'].values
-target['no_loan'] = df['no_loan'].values
-target['target'] = feature_engineering_target(df)
-df_merge = cleansed_app.merge(target, how="inner", on="ID")
+good(1) or bad(0) = pd.DataFrame()
+good(1) or bad(0)['ID'] = df.index
+good(1) or bad(0)['pay_off'] = df['pay_off'].values
+good(1) or bad(0)['#_of_overdues'] = df['overdue_1-29'].values+ df['overdue_30-59'].values + df['overdue_60-89'].values +df['overdue_90-119'].values+df['overdue_120-149'].values +df['overdue_over_150'].values
+good(1) or bad(0)['no_loan'] = df['no_loan'].values
+good(1) or bad(0)['good(1) or bad(0)'] = feature_engineering_good(1) or bad(0)(df)
+df_merge = cleansed_app.merge(good(1) or bad(0), how="inner", on="ID")
 df_merge.head(10)
-df_merge.describe()
-
-#%%
-df_merge.O
+# df_merge.describe()
 
 #%%
 df_merge = df_merge.dropna()
@@ -234,14 +231,14 @@ df_merge.isnull().sum()
 df_merge.columns
 
 #%%
-# finding relationships between target(good/bad) and other features
+# finding relationships between good(1) or bad(0)(good/bad) and other features
 df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'no_loan', 'target','OCCUPATION_TYPE']]
+       'no_loan', 'good(1) or bad(0)','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge2, hue = 'target', diag_kws={'bw': 0.2})
+g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
 #%%
 # kids vs features
@@ -260,7 +257,7 @@ df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'target','CNT_CHILDREN','OCCUPATION_TYPE']]
+       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
 #%%
@@ -269,12 +266,12 @@ features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'target','CNT_CHILDREN','OCCUPATION_TYPE']
+       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']
 
 
 for f in features:
     plt.figure()
-    ax = sns.countplot(x=f, data=df_merge2, hue = 'target', palette="Set1")
+    ax = sns.countplot(x=f, data=df_merge2, hue = 'good(1) or bad(0)', palette="Set1")
 # More famle than male in general, more applicants own properties and good applicants have fewer property counts. more applicants fall under working catagory, have secondary degree, married, have 2 children. good candidates have higher pay off time and usually pay of within a month. Bad candidates have higher # of overdue.
 
 #%%
@@ -338,7 +335,7 @@ final_fi
 
 #%%
 # Split data
-X = numerical_df_merge2.drop(['#_of_overdues','pay_off','target', 'no_loan'], axis=1).values
+X = numerical_df_merge2.drop(['#_of_overdues','pay_off','good(1) or bad(0)', 'no_loan'], axis=1).values
 y = numerical_df_merge2['#_of_overdues'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
@@ -351,12 +348,12 @@ dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
 dt.fit(X_train, y_train)
 
 #%%
-# if drop target column, #_of_overdues is based on age and emplyment period most heavily.
+# if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
 from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'target', 'no_loan'], axis=1).columns,    
+    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'good(1) or bad(0)', 'no_loan'], axis=1).columns,    
     class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
@@ -365,8 +362,8 @@ graph
 
 #%%
 # Split data
-X = numerical_df_merge2.drop('target', axis=1).values
-y = numerical_df_merge2['target'].values 
+X = numerical_df_merge2.drop('good(1) or bad(0)', axis=1).values
+y = numerical_df_merge2['good(1) or bad(0)'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -378,13 +375,13 @@ dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
 dt.fit(X_train, y_train)
 
 #%%
-# if drop target column, #_of_overdues is based on age and emplyment period most heavily.
+# if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
 from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop('target', axis=1).columns,    
-    class_names=numerical_df_merge2['target'].unique().astype(str),  
+    feature_names=numerical_df_merge2.drop('good(1) or bad(0)', axis=1).columns,    
+    class_names=numerical_df_merge2['good(1) or bad(0)'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -461,9 +458,9 @@ plot_confusion_matrix(cm_norm, classes=rf.classes_)
 
 
 #%%
-# xtarget = df_merge[df_merge.drop('target',axis = 1).columns]
-# ytarget = df_merge['target']
-# xtrain, xtest, ytrain, ytest = train_test_split(xtarget,ytarget, train_size = 0.8,stratify=ytarget, random_state = 0)
+# xgood(1) or bad(0) = df_merge[df_merge.drop('good(1) or bad(0)',axis = 1).columns]
+# ygood(1) or bad(0) = df_merge['good(1) or bad(0)']
+# xtrain, xtest, ytrain, ytest = train_test_split(xgood(1) or bad(0),ygood(1) or bad(0), train_size = 0.8,stratify=ygood(1) or bad(0), random_state = 0)
 
 #%%
 # from sklearn.tree import DecisionTreeClassifier
