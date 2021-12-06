@@ -236,30 +236,30 @@ df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'no_loan', 'good(1) or bad(0)','OCCUPATION_TYPE']]
+       'no_loan', 'good(1) or bad(0)','OCCUPATION_TYPE','CNT_CHILDREN']]
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
 #%%
 # kids vs features
-df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+df_merge3 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', '#_of_overdues',
        'CNT_CHILDREN','OCCUPATION_TYPE']]
 # Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge2, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
+g = sns.pairplot(df_merge3, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
 
 
-#%%
-# occupation type vs features
-df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-       'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']]
-# Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
+# #%%
+# # occupation type vs features
+# df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+#        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+#        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
+#        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
+#        'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']]
+# # Visualize the data using seaborn Pairplots
+# g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
 #%%
 # Investigate all the features by our y
 features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
@@ -291,17 +291,22 @@ numerical_df_merge2.head()
 
 #%%
 # Split data
-X = numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1).values
-y = numerical_df_merge2['#_of_overdues'].values 
+X = numerical_df_merge2.drop(['good(1) or bad(0)'], axis=1)
+y = numerical_df_merge2['good(1) or bad(0)'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=1)
 
 #%%
 # Decision tree
+from sklearn.metrics import classification_report
 dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
 dt.fit(X_train, y_train)
+print(f'DecisionTreeClassifier train score: {dt.score(X_train,y_train)}')
+print(f'DecisionTreeClassifier test score:  {dt.score(X_test,y_test)}')
+print(confusion_matrix(y_test, dt.predict(X_test)))
+print(classification_report(y_test, dt.predict(X_test))) 
 
 #%%
 from sklearn.tree import export_graphviz
@@ -344,30 +349,30 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 
 #%%
 # Decision tree
-dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
-dt.fit(X_train, y_train)
+# dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
+# dt.fit(X_train, y_train)
 
-#%%
-# if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
-from sklearn.tree import export_graphviz
-import graphviz
+# #%%
+# # if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
+# from sklearn.tree import export_graphviz
+# import graphviz
 
-dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'good(1) or bad(0)', 'no_loan'], axis=1).columns,    
-    class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
-    filled=True, rounded=True,  
-    special_characters=True)
-graph = graphviz.Source(dot_data)
-graph
+# dot_data = tree.export_graphviz(dt, out_file=None, 
+#     feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'good(1) or bad(0)', 'no_loan'], axis=1).columns,    
+#     class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
+#     filled=True, rounded=True,  
+#     special_characters=True)
+# graph = graphviz.Source(dot_data)
+# graph
 
-#%%
-# Split data
-X = numerical_df_merge2.drop('good(1) or bad(0)', axis=1).values
-y = numerical_df_merge2['good(1) or bad(0)'].values 
-print('X shape: {}'.format(np.shape(X)))
-print('y shape: {}'.format(np.shape(y)))
+# #%%
+# # Split data
+# X = numerical_df_merge2.drop('good(1) or bad(0)', axis=1).values
+# y = numerical_df_merge2['good(1) or bad(0)'].values 
+# print('X shape: {}'.format(np.shape(X)))
+# print('y shape: {}'.format(np.shape(y)))
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
 
 #%%
 # Decision tree
