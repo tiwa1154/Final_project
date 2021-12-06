@@ -110,38 +110,67 @@ def data_cleansing(data):
     data['DAYS_BIRTH'] = np.abs(data['DAYS_BIRTH']/365)
     data['DAYS_EMPLOYED'] = data['DAYS_EMPLOYED']/365 
 
-    housing_type = {'House / apartment' : 'House / apartment',
-                   'With parents': 'With parents',
-                    'Municipal apartment' : 'House / apartment',
-                    'Rented apartment': 'House / apartment',
-                    'Office apartment': 'House / apartment',
-                    'Co-op apartment': 'House / apartment'}
+    housing_type = {'House / apartment' : '1',
+                   'With parents': '6',
+                    'Municipal apartment' : '2',
+                    'Rented apartment': '3',
+                    'Office apartment': '4',
+                    'Co-op apartment': '5'}
               
-    income_type = {'Commercial associate':'Working',
-                  'State servant':'Working',
-                  'Working':'Working',
-                  'Pensioner':'Pensioner',
-                  'Student':'Student'}
-    education_type = {'Secondary / secondary special':'secondary',
-                     'Lower secondary':'secondary',
-                     'Higher education':'Higher education',
-                     'Incomplete higher':'Higher education',
-                     'Academic degree':'Academic degree'}
-    family_status = {'Single / not married':'Single',
-                     'Separated':'Single',
-                     'Widow':'Single',
-                     'Civil marriage':'Married',
-                    'Married':'Married'}
+    income_type = {'Commercial associate':'1',
+                  'State servant':'1',
+                  'Working':'1',
+                  'Pensioner':'2',
+                  'Student':'3'}
+                  # 3 major categories, working, student, pensioner
+    education_type = {'Secondary / secondary special':'1',
+                     'Lower secondary':'1',
+                     'Higher education':'2',
+                     'Incomplete higher':'2',
+                     'Academic degree':'3'}
+    family_status = {'Single / not married':'1',
+                     'Separated':'2',
+                     'Widow':'3',
+                     'Civil marriage':'4',
+                    'Married':'5'}
+    OCCUPATION_TYPE = {'Accountants':'1',
+                     'Cleaning staff':'2',
+                     'Cooking staff':'3',
+                     'Core staff':'4',
+                     'Drivers':'5',
+                    'HR staff': '6', 
+                    'High skill tech staff': '7',
+                    'IT staff': '8',
+                    'Laborers': '9',
+                    'Low-skill Laborers':'10', 
+                    'Managers':'11', 
+                    'Medicine staff':'12',
+                    'Private service staff':'13',
+                    'Realty agents':'14', 
+                    'Sales staff':'15',
+                    'Secretaries':'16',
+                    'Security staff':'17',
+                    'Waiters/barmen staff':'18'}
+    code_gender = {'M':'1',
+                     'F':'2'}
+    FLAG_OWN_CAR = {'Y':'1',
+                    'N':'2'}
+    FLAG_OWN_REALTY = {'Y':'1',
+                    'N':'2'}
     data['NAME_HOUSING_TYPE'] = data['NAME_HOUSING_TYPE'].map(housing_type)
     data['NAME_INCOME_TYPE'] = data['NAME_INCOME_TYPE'].map(income_type)
     data['NAME_EDUCATION_TYPE']=data['NAME_EDUCATION_TYPE'].map(education_type)
     data['NAME_FAMILY_STATUS']=data['NAME_FAMILY_STATUS'].map(family_status)
+    data['OCCUPATION_TYPE']=data['OCCUPATION_TYPE'].map(OCCUPATION_TYPE)
+    data['CODE_GENDER']=data['CODE_GENDER'].map(code_gender)
+    data['FLAG_OWN_CAR']=data['FLAG_OWN_CAR'].map(FLAG_OWN_CAR)
+    data['FLAG_OWN_REALTY']=data['FLAG_OWN_REALTY'].map(FLAG_OWN_REALTY)
     return data
 
 cleansed_app = data_cleansing(app)
 
 #%%
-def feature_engineering_good(1) or bad(0)(data):
+def feature_engineering_goodbad(data):
     good_or_bad = []
     for index, row in data.iterrows():
         paid_off = row['pay_off']
@@ -197,13 +226,13 @@ df['ID'] = df.index
 df.head(10)
 
 #%%
-good(1) or bad(0) = pd.DataFrame()
-good(1) or bad(0)['ID'] = df.index
-good(1) or bad(0)['pay_off'] = df['pay_off'].values
-good(1) or bad(0)['#_of_overdues'] = df['overdue_1-29'].values+ df['overdue_30-59'].values + df['overdue_60-89'].values +df['overdue_90-119'].values+df['overdue_120-149'].values +df['overdue_over_150'].values
-good(1) or bad(0)['no_loan'] = df['no_loan'].values
-good(1) or bad(0)['good(1) or bad(0)'] = feature_engineering_good(1) or bad(0)(df)
-df_merge = cleansed_app.merge(good(1) or bad(0), how="inner", on="ID")
+target = pd.DataFrame()
+target['ID'] = df.index
+target['pay_off'] = df['pay_off'].values
+target['#_of_overdues'] = df['overdue_1-29'].values+ df['overdue_30-59'].values + df['overdue_60-89'].values +df['overdue_90-119'].values+df['overdue_120-149'].values +df['overdue_over_150'].values
+target['no_loan'] = df['no_loan'].values
+target['good(1) or bad(0)'] = feature_engineering_goodbad(df)
+df_merge = cleansed_app.merge(target, how="inner", on="ID")
 df_merge.head(10)
 # df_merge.describe()
 
@@ -212,6 +241,7 @@ df_merge = df_merge.dropna()
 
 #%%
 df_merge.head(5)
+
 #%%
 # Investigate all the elements whithin each Feature 
 
@@ -242,13 +272,13 @@ g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
 #%%
 # kids vs features
-df_merge3 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-       'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', '#_of_overdues',
-       'CNT_CHILDREN','OCCUPATION_TYPE']]
-# Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge3, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
+# df_merge3 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
+#        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
+#        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
+#        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', '#_of_overdues',
+#        'CNT_CHILDREN','OCCUPATION_TYPE']]
+# # Visualize the data using seaborn Pairplots
+# g = sns.pairplot(df_merge3, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
 
 
 # #%%
@@ -260,6 +290,7 @@ g = sns.pairplot(df_merge3, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette
 #        'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']]
 # # Visualize the data using seaborn Pairplots
 # g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
+
 #%%
 # Investigate all the features by our y
 features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
@@ -279,20 +310,23 @@ df_merge2.head()
 
 #%%
 # convert catagorical variables to numeric
-numerical_df_merge2 = pd.get_dummies(df_merge2, columns = ['NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'CODE_GENDER','FLAG_OWN_CAR', 'FLAG_OWN_REALTY','OCCUPATION_TYPE'])
-numerical_df_merge2.head()
+# numerical_df_merge2 = pd.get_dummies(df_merge2, columns = ['NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE', 'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'CODE_GENDER','FLAG_OWN_CAR', 'FLAG_OWN_REALTY','OCCUPATION_TYPE'])
+# numerical_df_merge2.head()
 
 #%%
 # Scaling columns between 0 and 1 for faster training
-scale_vars = ['AMT_INCOME_TOTAL','DAYS_BIRTH','DAYS_EMPLOYED']
+scale_vars = ['AMT_INCOME_TOTAL','DAYS_BIRTH','DAYS_EMPLOYED','OCCUPATION_TYPE']
 scaler = MinMaxScaler()
-numerical_df_merge2[scale_vars] = scaler.fit_transform(numerical_df_merge2[scale_vars])
-numerical_df_merge2.head()
+df_merge2[scale_vars] = scaler.fit_transform(df_merge2[scale_vars])
+df_merge2.head()
 
 #%%
+# df_merge2.drop(columns=['pay_off','#_of_overdues','no_loan'])
+df_merge2.head()
+#%%
 # Split data
-X = numerical_df_merge2.drop(['good(1) or bad(0)'], axis=1)
-y = numerical_df_merge2['good(1) or bad(0)'].values 
+X = df_merge2.drop(['good(1) or bad(0)'], axis=1)
+y = df_merge2['good(1) or bad(0)'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -301,7 +335,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 #%%
 # Decision tree
 from sklearn.metrics import classification_report
-dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
+dt = DecisionTreeClassifier(criterion='entropy', random_state=1)
 dt.fit(X_train, y_train)
 print(f'DecisionTreeClassifier train score: {dt.score(X_train,y_train)}')
 print(f'DecisionTreeClassifier test score:  {dt.score(X_test,y_test)}')
@@ -313,8 +347,8 @@ from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1).columns,    
-    class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
+    feature_names=df_merge2.drop(['good(1) or bad(0)'], axis=1).columns,    
+    class_names=df_merge2['good(1) or bad(0)'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -322,7 +356,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 'no_loan'], axis=1)):
+for i, column in enumerate(df_merge2.drop(['good(1) or bad(0)'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
@@ -336,67 +370,6 @@ for i, column in enumerate(numerical_df_merge2.drop(['#_of_overdues','pay_off', 
 # Ordering the data
 final_fi = final_fi.sort_values('Feature Importance Score', ascending = False).reset_index()            
 final_fi
-# the only features effect the score are # of overdues, pay_off, NAME_FAMILY_STATUS_Widow, FLAG_OWN_CAR_N, no_loan, AMT_INCOME_TOTAL
-
-#%%
-# Split data
-X = numerical_df_merge2.drop(['#_of_overdues','pay_off','good(1) or bad(0)', 'no_loan'], axis=1).values
-y = numerical_df_merge2['#_of_overdues'].values 
-print('X shape: {}'.format(np.shape(X)))
-print('y shape: {}'.format(np.shape(y)))
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
-
-#%%
-# Decision tree
-# dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
-# dt.fit(X_train, y_train)
-
-# #%%
-# # if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
-# from sklearn.tree import export_graphviz
-# import graphviz
-
-# dot_data = tree.export_graphviz(dt, out_file=None, 
-#     feature_names=numerical_df_merge2.drop(['#_of_overdues','pay_off', 'good(1) or bad(0)', 'no_loan'], axis=1).columns,    
-#     class_names=numerical_df_merge2['#_of_overdues'].unique().astype(str),  
-#     filled=True, rounded=True,  
-#     special_characters=True)
-# graph = graphviz.Source(dot_data)
-# graph
-
-# #%%
-# # Split data
-# X = numerical_df_merge2.drop('good(1) or bad(0)', axis=1).values
-# y = numerical_df_merge2['good(1) or bad(0)'].values 
-# print('X shape: {}'.format(np.shape(X)))
-# print('y shape: {}'.format(np.shape(y)))
-
-# X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=0)
-
-#%%
-# Decision tree
-dt = DecisionTreeClassifier(criterion='entropy', max_depth=2, random_state=1)
-dt.fit(X_train, y_train)
-
-#%%
-# if drop good(1) or bad(0) column, #_of_overdues is based on age and emplyment period most heavily.
-from sklearn.tree import export_graphviz
-import graphviz
-
-dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=numerical_df_merge2.drop('good(1) or bad(0)', axis=1).columns,    
-    class_names=numerical_df_merge2['good(1) or bad(0)'].unique().astype(str),  
-    filled=True, rounded=True,  
-    special_characters=True)
-graph = graphviz.Source(dot_data)
-graph
-#%%
-# Accuracy on Train
-print("Training Accuracy is: ", dt.score(X_train, y_train))
-
-# Accuracy on Train
-print("Testing Accuracy is: ", dt.score(X_test, y_test))
 
 #%%
 # Confusion Matrix function
@@ -418,32 +391,10 @@ y_pred = dt.predict(X_train)
 cm = confusion_matrix(y_train, y_pred)
 cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
 plt.figure()
-plot_confusion_matrix(cm_norm, classes=dt.classes_, title='Training confusion')
+plot_confusion_matrix(cm_norm, classes=dt.classes_, title='Training confusion on good or bad credit')
 
 #%%
 # Random Forest
-
-
-rf = RandomForestClassifier(n_estimators=25134, criterion='entropy')
-rf.fit(X_train, y_train)
-prediction_test = rf.predict(X=X_test)
-
-# source: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
-
-# Accuracy on Test
-print("Training Accuracy is: ", rf.score(X_train, y_train))
-# Accuracy on Train
-print("Testing Accuracy is: ", rf.score(X_test, y_test))
-
-# Confusion Matrix
-cm = confusion_matrix(y_test, prediction_test)
-cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
-plt.figure()
-plot_confusion_matrix(cm_norm, classes=rf.classes_)
-
-#%%
-
-
 rf = RandomForestClassifier(n_estimators=100, criterion='entropy')
 rf.fit(X_train, y_train)
 prediction_test = rf.predict(X=X_test)
@@ -454,12 +405,15 @@ prediction_test = rf.predict(X=X_test)
 print("Training Accuracy is: ", rf.score(X_train, y_train))
 # Accuracy on Train
 print("Testing Accuracy is: ", rf.score(X_test, y_test))
-
+print(confusion_matrix(y_test, rf.predict(X_test)))
+print(classification_report(y_test, rf.predict(X_test))) 
 # Confusion Matrix
 cm = confusion_matrix(y_test, prediction_test)
 cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
 plt.figure()
 plot_confusion_matrix(cm_norm, classes=rf.classes_)
+
+#%%
 
 
 #%%
