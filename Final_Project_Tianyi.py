@@ -99,6 +99,7 @@ credit['status'] = np.where((credit['STATUS'] == '2') | (credit['STATUS'] == '3'
 df = credit.pivot(index = 'ID', columns = 'MONTHS_BALANCE', values = 'STATUS')
 #%%
 df.head(n = 3)
+
 #%%
 def data_cleansing(data):
     # Adding number of family members with number of children to get overall family members.
@@ -185,22 +186,22 @@ def feature_engineering_goodbad(data):
             
         if overall_overdues == 0:
             if paid_off >= no_loan or paid_off <= no_loan:
-                good_or_bad.append(1)
+                good_or_bad.append('good')
             elif paid_off == 0 and no_loan == 1:
-                good_or_bad.append(1)
+                good_or_bad.append('good')
         
         elif overall_overdues != 0:
             if paid_off > overall_overdues:
-                good_or_bad.append(1)
+                good_or_bad.append('good')
             elif paid_off <= overall_overdues:
-                good_or_bad.append(0)
+                good_or_bad.append('bad')
         
         elif paid_off == 0 and no_loan != 0:
             if overall_overdues <= no_loan or overall_overdues >= no_loan:
-                good_or_bad.append(0)
+                good_or_bad.append('bad')
 
         else:
-            good_or_bad.append(1)
+            good_or_bad.append('good')
                 
         
     return good_or_bad
@@ -270,26 +271,6 @@ df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
-#%%
-# kids vs features
-# df_merge3 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-#        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-#        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-#        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', '#_of_overdues',
-#        'CNT_CHILDREN','OCCUPATION_TYPE']]
-# # Visualize the data using seaborn Pairplots
-# g = sns.pairplot(df_merge3, hue = '#_of_overdues', diag_kws={'bw': 0.2}, palette = "tab10")
-
-
-# #%%
-# # occupation type vs features
-# df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
-#        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-#        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-#        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-#        'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']]
-# # Visualize the data using seaborn Pairplots
-# g = sns.pairplot(df_merge2, hue = 'OCCUPATION_TYPE', diag_kws={'bw': 0.2}, palette = "tab10")
 
 #%%
 # Investigate all the features by our y
@@ -315,18 +296,23 @@ df_merge2.head()
 
 #%%
 # Scaling columns between 0 and 1 for faster training
-scale_vars = ['AMT_INCOME_TOTAL','DAYS_BIRTH','DAYS_EMPLOYED','OCCUPATION_TYPE']
-scaler = MinMaxScaler()
-df_merge2[scale_vars] = scaler.fit_transform(df_merge2[scale_vars])
-df_merge2.head()
+# scale_vars = ['AMT_INCOME_TOTAL','DAYS_BIRTH','DAYS_EMPLOYED','OCCUPATION_TYPE']
+# scaler = MinMaxScaler()
+# df_merge2[scale_vars] = scaler.fit_transform(df_merge2[scale_vars])
+# df_merge2.head()
 
 #%%
-# df_merge2.drop(columns=['pay_off','#_of_overdues','no_loan'])
-df_merge2.head()
+df_mergeNew = df_merge2.drop(columns=['pay_off','#_of_overdues','no_loan'],axis=1)
+#%%
+df_mergeNew.head()
+
+#%%
+sns.heatmap(df_mergeNew.corr(), annot=True)
+plt.show()
 #%%
 # Split data
-X = df_merge2.drop(['good(1) or bad(0)'], axis=1)
-y = df_merge2['good(1) or bad(0)'].values 
+X = df_mergeNew.drop(['good(1) or bad(0)'], axis=1)
+y = df_mergeNew['good(1) or bad(0)'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -335,7 +321,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 #%%
 # Decision tree
 from sklearn.metrics import classification_report
-dt = DecisionTreeClassifier(criterion='entropy', random_state=1)
+dt = DecisionTreeClassifier(criterion='entropy',   random_state=1)
 dt.fit(X_train, y_train)
 print(f'DecisionTreeClassifier train score: {dt.score(X_train,y_train)}')
 print(f'DecisionTreeClassifier test score:  {dt.score(X_test,y_test)}')
@@ -347,8 +333,8 @@ from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=df_merge2.drop(['good(1) or bad(0)'], axis=1).columns,    
-    class_names=df_merge2['good(1) or bad(0)'].unique().astype(str),  
+    feature_names=df_mergeNew.drop(['good(1) or bad(0)'], axis=1).columns,    
+    class_names=df_mergeNew['good(1) or bad(0)'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -356,7 +342,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(df_merge2.drop(['good(1) or bad(0)'], axis=1)):
+for i, column in enumerate(df_mergeNew.drop(['good(1) or bad(0)'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
