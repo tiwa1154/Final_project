@@ -185,19 +185,19 @@ def feature_engineering_goodbad(data):
         overall_overdues = over_1+over_30+over_60+over_90+over_120    
             
         if overall_overdues == 0:
-            if paid_off >= no_loan or paid_off <= no_loan:
-                good_or_bad.append('good')
-            elif paid_off == 0 and no_loan == 1:
+            # if paid_off >= no_loan or paid_off <= no_loan:
+            #     good_or_bad.append('good')
+            if paid_off >= 0 or no_loan >= 0:
                 good_or_bad.append('good')
         
         elif overall_overdues != 0:
-            if paid_off > overall_overdues:
+            if paid_off / overall_overdues >= 1.5:
                 good_or_bad.append('good')
-            elif paid_off <= overall_overdues:
+            else:
                 good_or_bad.append('bad')
         
         elif paid_off == 0 and no_loan != 0:
-            if overall_overdues <= no_loan or overall_overdues >= no_loan:
+            if overall_overdues > 0:
                 good_or_bad.append('bad')
 
         else:
@@ -244,6 +244,9 @@ df_merge = df_merge.dropna()
 df_merge.head(5)
 
 #%%
+sns.countplot(x="good(1) or bad(0)", data = df_merge )
+
+#%%
 # Investigate all the elements whithin each Feature 
 
 for column in df_merge:
@@ -278,8 +281,7 @@ features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
        'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']
-
+       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE','no_loan']
 
 for f in features:
     plt.figure()
