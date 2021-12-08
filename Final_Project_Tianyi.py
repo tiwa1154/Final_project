@@ -188,20 +188,20 @@ def feature_engineering_goodbad(data):
             # if paid_off >= no_loan or paid_off <= no_loan:
             #     good_or_bad.append('good')
             if paid_off >= 0 or no_loan >= 0:
-                good_or_bad.append('good')
+                good_or_bad.append('1')
         
         elif overall_overdues != 0:
             if paid_off / overall_overdues >= 1.5:
-                good_or_bad.append('good')
+                good_or_bad.append('1')
             else:
-                good_or_bad.append('bad')
+                good_or_bad.append('0')
         
         elif paid_off == 0 and no_loan != 0:
             if overall_overdues > 0:
-                good_or_bad.append('bad')
+                good_or_bad.append('0')
 
         else:
-            good_or_bad.append('good')
+            good_or_bad.append('0')
                 
         
     return good_or_bad
@@ -403,4 +403,17 @@ plt.figure()
 plot_confusion_matrix(cm_norm, classes=rf.classes_)
 
 
+# %%
+from sklearn.model_selection import cross_val_score
+from sklearn.metrics import mean_squared_error as MSE 
+# Set n_jobs to -1 in order to exploit all CPU cores in computation
+MSE_CV = - cross_val_score(rf, X_train, y_train, cv= 20, scoring='neg_mean_squared_error')
+rf.fit(X_train, y_train)  # Fit 'rf' to the training set
+y_predict_train = rf.predict(X_train)  # Predict the labels of training set
+y_predict_test = rf.predict(X_test)  # Predict the labels of test set
+
+print('CV RMSE:', MSE_CV.mean()**(0.5) )  #CV MSE 
+print('Training set RMSE:', MSE(y_train, y_predict_train)**(0.5) )   # Training set MSE
+print('Test set RMSE:', MSE(y_test, y_predict_test)**(0.5) )   # Test set MSE 
+print("\nReady to continue.")
 # %%
