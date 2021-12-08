@@ -417,3 +417,6 @@ print('Training set RMSE:', MSE(y_train, y_predict_train)**(0.5) )   # Training 
 print('Test set RMSE:', MSE(y_test, y_predict_test)**(0.5) )   # Test set MSE 
 print("\nReady to continue.")
 # %%
+rf_cv_acc = cross_val_score(rf, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
+print(f'LR CV accuracy score:  {rf_cv_acc}')
+# %%
