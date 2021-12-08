@@ -67,7 +67,7 @@ import os
 import numpy as np
 import pandas as pd
 # import sklearn
-import matplotlib.pyplot as plt
+import matplotlib.plt as plt
 import seaborn as sns
 from seaborn.palettes import color_palette
 from sklearn.ensemble import RandomForestClassifier
@@ -320,6 +320,32 @@ print('y shape: {}'.format(np.shape(y)))
 X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test_size=0.2, random_state=1)
 
 #%%
+train_scores, test_scores = list(), list()
+# define the tree depths to evaluate
+values = [i for i in range(1, 30)]
+# evaluate a decision tree for each depth
+for i in values:
+	# configure the model
+	model = DecisionTreeClassifier(max_depth=i)
+	# fit model on the training dataset
+	model.fit(X_train, y_train)
+	# evaluate on the train dataset
+	train_yhat = model.predict(X_train)
+	train_acc = accuracy_score(y_train, train_yhat)
+	train_scores.append(train_acc)
+	# evaluate on the test dataset
+	test_yhat = model.predict(X_test)
+	test_acc = accuracy_score(y_test, test_yhat)
+	test_scores.append(test_acc)
+	# summarize progress
+	print('>%d, train: %.3f, test: %.3f' % (i, train_acc, test_acc))
+# plot of train and test scores vs tree depth
+plt.plot(values, train_scores, '-o', label='Train')
+plt.plot(values, test_scores, '-o', label='Test')
+plt.legend()
+plt.show()
+
+#%%
 # Decision tree
 from sklearn.metrics import classification_report
 dt = DecisionTreeClassifier(criterion='entropy',   random_state=1)
@@ -418,5 +444,8 @@ print('Test set RMSE:', MSE(y_test, y_predict_test)**(0.5) )   # Test set MSE
 print("\nReady to continue.")
 # %%
 rf_cv_acc = cross_val_score(rf, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
-print(f'LR CV accuracy score:  {rf_cv_acc}')
+print(f'LR CV accuracy score:',  rf_cv_acc.mean)
+# %%
+dt_cv_acc = cross_val_score(dt, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
+print(f'LR CV accuracy score:  {dt_cv_acc}')
 # %%
