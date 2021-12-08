@@ -269,8 +269,7 @@ df_merge.columns
 df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'no_loan', 'good(1) or bad(0)','OCCUPATION_TYPE','CNT_CHILDREN']]
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'good(1) or bad(0)','OCCUPATION_TYPE','CNT_CHILDREN']]
 # Visualize the data using seaborn Pairplots
 g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
@@ -365,7 +364,8 @@ final_fi
 def plot_confusion_matrix(cm, classes=None, title='Confusion matrix'):
     """Plots a confusion matrix."""
     if classes is not None:
-        sns.heatmap(cm, xticklabels=classes, yticklabels=classes, vmin=0., vmax=1., annot=True, annot_kws={'size':50})
+        target_names = ['Good debt', 'Bad debt']
+        sns.heatmap(cm, xticklabels=target_names, yticklabels=target_names, vmin=0., vmax=1., annot=True, annot_kws={'size':50})
     else:
         sns.heatmap(cm, vmin=0., vmax=1.)
     plt.title(title)
@@ -376,6 +376,7 @@ y_pred = dt.predict(X_train)
 
 #%%
 # Plotting Confusion Matrix
+
 cm = confusion_matrix(y_train, y_pred)
 cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
 plt.figure()
