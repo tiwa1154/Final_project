@@ -67,7 +67,7 @@ import os
 import numpy as np
 import pandas as pd
 # import sklearn
-import matplotlib.plt as plt
+import matplotlib.pyplot as plt
 import seaborn as sns
 from seaborn.palettes import color_palette
 from sklearn.ensemble import RandomForestClassifier
@@ -421,7 +421,7 @@ print("Training Accuracy is: ", rf.score(X_train, y_train))
 # Accuracy on Train
 print("Testing Accuracy is: ", rf.score(X_test, y_test))
 print(confusion_matrix(y_test, rf.predict(X_test)))
-print(classification_report(y_test, rf.predict(X_test))) 
+print(classification_report(y_test, rf.predict(X_test),target_names=target_names)) 
 # Confusion Matrix
 cm = confusion_matrix(y_test, prediction_test)
 cm_norm = cm/cm.sum(axis=1)
