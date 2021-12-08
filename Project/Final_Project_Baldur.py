@@ -176,7 +176,6 @@ plt.xlabel('Marital status')
 plt.title('Matiral status vs. Debt overdue period')
 plt.show()
 # conclusion?
-<<<<<<< HEAD:Final_Project_Tianyi.py
 
 # %%
 # Matiral status vs. No loan period
@@ -196,8 +195,7 @@ plt.show()
 # more people have no kids have longer debt overdue time
 
 # %%
-df_sub.plot(x=kids, y=debt_sum, kind="bar")
-=======
+# df_sub.plot(x=kids, y=debt_sum, kind="bar")
 #%%
 # There are might be some EDA that still needs to be done.
 # But we'll see. 
@@ -327,6 +325,7 @@ def customer(df):
 #%%
 df_m = customer(df_r)
 #%%
+# Drop Unwanted Columns
 a = [11, 12, 13, 14, 15, 16, 17, 18, 19]
 df_m.drop(df_r.columns[a], axis = 1, inplace = True)
 df_m.head()
@@ -360,10 +359,10 @@ print(classification_report(y_test, y_test_pred))
 pd.DataFrame({'Variable':X_train.columns,'Importance':
         xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
 # %%
-os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
-fig, ax = plt.subplots(figsize=(200, 250))
-plot_tree(xgb_fit, ax=ax, rankdir='LR')
-plt.show()
+# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
+# fig, ax = plt.subplots(figsize=(200, 250))
+# plot_tree(xgb_fit, ax=ax, rankdir='LR')
+# plt.show()
 # %%
 # Logistic Regression Model
 from sklearn.linear_model import LogisticRegression
@@ -383,6 +382,95 @@ print(classification_report(y_test, y_test_pred2))
 import scikitplot as skplt
 y_pred_proba = lr_fit.predict_proba(X_test)
 skplt.metrics.plot_roc_curve(y_test, y_pred_proba)
->>>>>>> 469e72fa8e824c718e3c0dffaa8323e6d4669b39:Final_Project_ver_2_0.py
 plt.show()
+#%% 
+############K-means#######################
+# %%
+# Scale Data
+x_k = x.copy()
+y_k = y.copy()
+from sklearn.preprocessing import StandardScaler
+SS = StandardScaler()
+x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED',
+'sum_overdue']] = SS.fit_transform(x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'sum_overdue']])
+
+# %%
+# PCA
+from sklearn.decomposition import PCA
+cov_matrix = np.cov(x_k.T) # Find Covariance
+eig_val, eig_vec = np.linalg.eig(cov_matrix) # Find Eigenvalues and Eigenvectors
+tot = np.sum(eig_val)
+exp_var = [(i/tot)*100 for i in sorted(eig_val, reverse = True)]   # explained variance
+tot_var = np.cumsum(exp_var)
+
+#%%
+from matplotlib import style
+style.use('ggplot')
+plt.rcParams['figure.figsize'] = (8,6)
+plt.bar(range(12), exp_var, alpha=0.50, align = 'center', label='Individual Variance Explained')
+plt.step(range(12), tot_var, where ='mid', label='Cumulative Variance Explained')
+plt.ylabel('Explained Variance Ratio')
+plt.xlabel('Principal Components')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.show()
+#%%
+# Applying PCA
+PCA_7 = PCA(n_components=7)
+X_PCA_7 = PCA_7.fit_transform(x_k)
+#%%
+#Elbow Method
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+kmeans_kwargs = {
+        "init": "random",
+     "n_init": 10,
+     "max_iter": 300,
+     "random_state": 42,
+ }
+
+ # A list holds the SSE values for each k
+sse = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
+    kmeans.fit(X_PCA_7)
+    sse.append(kmeans.inertia_)
+#%%
+
+plt.style.use("ggplot")
+plt.plot(range(1, 11), sse)
+plt.xticks(range(1, 11))
+plt.xlabel("Number of Clusters")
+plt.ylabel("SSE")
+plt.show()
+# %%
+# K = 2
+kmeans = KMeans(n_clusters= 2)
+label = kmeans.fit_predict(X_PCA_7)
+u_labels = np.unique(label)
+ 
+for i in u_labels:
+    plt.scatter(X_PCA_7[label == i , 0], X_PCA_7[label == i , 1], 
+    label = i)
+plt.legend()
+plt.show()
+# %%
+# K = 5
+kmeans = KMeans(n_clusters= 5)
+label2 = kmeans.fit_predict(X_PCA_7)
+u_labels2 = np.unique(label2)
+ 
+for i in u_labels2:
+    plt.scatter(X_PCA_7[label2 == i , 0], X_PCA_7[label2 == i , 1], 
+    label = i)
+plt.legend()
+plt.show()
+# %%
+# We will stick with K = 2
+print('\nConfusion matrix :')
+print(confusion_matrix(y, label))
+      
+print('\nClassification report:')      
+print(classification_report(y, label))
 # %%
