@@ -1,8 +1,8 @@
 #%%
 # Sharing some hot keys to help with editing. Happy Coding, team.
 #
-# To add a new cell, type '#%%'
-# To add a new markdown cell, type '#%% [markdown]'
+# To add a  cell, type '#%%'
+# To add a  markdown cell, type '#%% [markdown]'
 # To undo 'ctrl + Z'
 # To wrap for long text 'alt + Z'
 # To edit multiple line 'ctrl + alt + arrow'
@@ -279,8 +279,8 @@ g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
 features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'pay_off', '#_of_overdues',
-       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE','no_loan']
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS',
+       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']
 
 for f in features:
     plt.figure()
@@ -303,17 +303,17 @@ df_merge2.head()
 # df_merge2.head()
 
 #%%
-df_mergeNew = df_merge2.drop(columns=['pay_off','#_of_overdues','no_loan'],axis=1)
-#%%
-df_mergeNew.head()
+# df_merge = df_merge2.drop(columns=['pay_off','#_of_overdues','no_loan'],axis=1)
+# #%%
+# df_merge.head()
 
 #%%
-sns.heatmap(df_mergeNew.corr(), annot=True)
+sns.heatmap(df_merge2.corr(), annot=True)
 plt.show()
 #%%
 # Split data
-X = df_mergeNew.drop(['good(1) or bad(0)'], axis=1)
-y = df_mergeNew['good(1) or bad(0)'].values 
+X = df_merge2.drop(['good(1) or bad(0)'], axis=1)
+y = df_merge2['good(1) or bad(0)'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -324,18 +324,19 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, train_size = 0.8, test
 from sklearn.metrics import classification_report
 dt = DecisionTreeClassifier(criterion='entropy',   random_state=1)
 dt.fit(X_train, y_train)
+target_names = ['Good credit', 'Bad credit']
 print(f'DecisionTreeClassifier train score: {dt.score(X_train,y_train)}')
 print(f'DecisionTreeClassifier test score:  {dt.score(X_test,y_test)}')
 print(confusion_matrix(y_test, dt.predict(X_test)))
-print(classification_report(y_test, dt.predict(X_test))) 
+print(classification_report(y_test, dt.predict(X_test),target_names=target_names)) 
 
 #%%
 from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=df_mergeNew.drop(['good(1) or bad(0)'], axis=1).columns,    
-    class_names=df_mergeNew['good(1) or bad(0)'].unique().astype(str),  
+    feature_names=df_merge2.drop(['good(1) or bad(0)'], axis=1).columns,    
+    class_names=df_merge2['good(1) or bad(0)'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -343,7 +344,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(df_mergeNew.drop(['good(1) or bad(0)'], axis=1)):
+for i, column in enumerate(df_merge2.drop(['good(1) or bad(0)'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
@@ -364,7 +365,6 @@ final_fi
 def plot_confusion_matrix(cm, classes=None, title='Confusion matrix'):
     """Plots a confusion matrix."""
     if classes is not None:
-        target_names = ['Good debt', 'Bad debt']
         sns.heatmap(cm, xticklabels=target_names, yticklabels=target_names, vmin=0., vmax=1., annot=True, annot_kws={'size':50})
     else:
         sns.heatmap(cm, vmin=0., vmax=1.)
@@ -378,13 +378,13 @@ y_pred = dt.predict(X_train)
 # Plotting Confusion Matrix
 
 cm = confusion_matrix(y_train, y_pred)
-cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
+cm_norm = cm/cm.sum(axis=1)
 plt.figure()
 plot_confusion_matrix(cm_norm, classes=dt.classes_, title='Training confusion on good or bad credit')
 
 #%%
 # Random Forest
-rf = RandomForestClassifier(n_estimators=100, criterion='entropy')
+rf = RandomForestClassifier(n_estimators=200, criterion='entropy',min_samples_split = 5, min_samples_leaf = 2)
 rf.fit(X_train, y_train)
 prediction_test = rf.predict(X=X_test)
 
@@ -398,7 +398,9 @@ print(confusion_matrix(y_test, rf.predict(X_test)))
 print(classification_report(y_test, rf.predict(X_test))) 
 # Confusion Matrix
 cm = confusion_matrix(y_test, prediction_test)
-cm_norm = cm/cm.sum(axis=1)[:, np.newaxis]
+cm_norm = cm/cm.sum(axis=1)
 plt.figure()
 plot_confusion_matrix(cm_norm, classes=rf.classes_)
 
+
+# %%
