@@ -350,7 +350,7 @@ plt.show()
 from sklearn.metrics import classification_report
 dt = DecisionTreeClassifier(criterion='entropy',   random_state=1)
 dt.fit(X_train, y_train)
-target_names = ['Good credit', 'Bad credit']
+target_names = ['Bad credit', 'Good credit']
 print(f'DecisionTreeClassifier train score: {dt.score(X_train,y_train)}')
 print(f'DecisionTreeClassifier test score:  {dt.score(X_test,y_test)}')
 print(confusion_matrix(y_test, dt.predict(X_test)))
