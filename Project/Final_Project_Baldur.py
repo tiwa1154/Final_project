@@ -52,8 +52,29 @@
 # 
 # Data Decription (Credit.csv)	
 # * ID:	               Client number	
-# * MONTHS_BALANCE:	   The month of the extracted data is the starting point, backwards, 0 is the current month, -1 is the previous month, and so on
-# * STATUS:	           0: 1-29 days past due 1: 30-59 days past due 2: 60-89 days overdue 3: 90-119 days overdue 4: 120-149 days overdue 5: Overdue or bad debts, write-offs for more than 150 days C: paid off that month X: No loan for the month
+# * MONTHS_BALANCE:	   The month of the extracted data is the starting point, backwards 
+# 
+# 0 is the current month 
+# 
+# -1 is the previous month, and so on
+#
+# * STATUS:	  
+#         
+# 0: 1-29 days past due 
+#
+# 1: 30-59 days past due 
+#
+# 2: 60-89 days overdue 
+#                      
+# 3: 90-119 days overdue 
+#
+# 4: 120-149 days overdue 
+#
+# 5: Overdue or bad debts, write-offs for more than 150 days 
+#
+# C: paid off that month 
+#
+# X: No loan for the month
 
 # %%[markdown]
 ## Preprocessing & EDA
@@ -84,7 +105,7 @@ credit.head(n = 3)
 # Check the discussion here: https://www.kaggle.com/rikdifos/credit-card-approval-y_test_pred/discussion/119320
 
 # To get the wide table
-credit['status'] = np.where((credit['STATUS'] == '2') | (credit['STATUS'] == '3' )| (credit['STATUS'] == '4' )| (credit['STATUS'] == '5'), 1, 0) # define > 60 days past-due
+credit['status'] = np.where((credit['STATUS'] == '2') | (credit['STATUS'] == '3' )| (credit['STATUS'] == '4' )| (credit['STATUS'] == '5'), 1, 0) 
 
 credit_piv = credit.pivot(index = 'ID', columns = 'MONTHS_BALANCE', values = 'STATUS')
 #%%
@@ -140,65 +161,8 @@ df_sub['sum_column']= df_sub.iloc[:,20:26].sum(axis=1)
 df_sub.head()
 # higher sum means more days overdue
 
-#%%
-# total annual income vs. debt overdue period
-fuzzyincome = df_sub.AMT_INCOME_TOTAL + np.random.normal(0,1, size=len(df_sub.AMT_INCOME_TOTAL))
-debt_sum = df_sub.sum_column + np.random.normal(0,1, size=len(df_sub.sum_column))
-plt.plot(fuzzyincome, debt_sum,'o', markersize=3, alpha = 0.1)
-# sns.boxplot(y="sum_column", x="AMT_INCOME_TOTAL",
-#               color="b",
-#                data=df_sub)
-plt.ylabel('Past due summary')
-plt.xlabel('Annual income')
-plt.title('Annual income vs. Debt overdue period ')
-plt.show()
-# higher income, less overdue
-
-# %%
-# marital status vs debt overdue period
-status = df_sub.NAME_FAMILY_STATUS
-plt.plot(status, debt_sum,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Past due period')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# Married population has a longer debt overdue period compare to other marital status
 
 #%%
-print(df_sub.NAME_INCOME_TYPE.value_counts())
-
-# %%
-# add work type
-sns.scatterplot(x=status, y=debt_sum, hue="NAME_INCOME_TYPE", data=df_sub)
-plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-plt.ylabel('Past due period')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# conclusion?
-
-# %%
-# Matiral status vs. No loan period
-no_loan = df_sub.no_loan
-plt.plot(status, no_loan,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Month with no loan')
-plt.xlabel('Marital status')
-plt.title('Matiral status vs. No loan period')
-plt.show()
-# %%
-kids = df_sub.CNT_CHILDREN
-plt.plot(kids, debt_sum,'o', markersize=3, alpha = 0.1)
-plt.ylabel('Past due period')
-plt.xlabel('Number of kids')
-plt.title('Matiral status vs. Debt overdue period')
-plt.show()
-# more people have no kids have longer debt overdue time
-
-# %%
-# df_sub.plot(x=kids, y=debt_sum, kind="bar")
-#%%
-# There are might be some EDA that still needs to be done.
-# But we'll see. 
 #######################################################
 # The following procedures are for the model building #
 #######################################################
@@ -240,12 +204,12 @@ df_r["FLAG_OWN_REALTY"] = df_r["FLAG_OWN_REALTY"].apply(ny_convert)
 # For convenience, it is easy to sort marital this way. 
 # No partenership: 0, else 1.
 def marr_convert(m):
-    if m == "Single / not married" or "Separated" or "Widow":
+    if m == "Single / not married" or m == "Separated" or m=="Widow":
         return 0
     else:
         return 1
 #%%
-df_r["NAME_FAMILY_STATUS"] = df_r["NAME_FAMILY_STATUS"].apply(ny_convert)
+df_r["NAME_FAMILY_STATUS"] = df_r["NAME_FAMILY_STATUS"].apply(marr_convert)
 # %%
 # Same way for housing type
 def house_convert(h):
@@ -267,9 +231,9 @@ def income_convert(income):
 df_r["NAME_INCOME_TYPE"] = df_r["NAME_INCOME_TYPE"].apply(income_convert)
 # %%
 def edu_convert(edu):
-    if edu == "Secondary / secondary special" or "Lower secondary":
+    if edu == "Secondary / secondary special" or edu == "Lower secondary":
         return 0
-    elif edu == "Higher education" or "Incomplete higher":
+    elif edu == "Higher education" or edu == "Incomplete higher":
         return 1
     else:
         return 2
@@ -304,6 +268,7 @@ df_r.head()
 # Good Credit: no_load, pay_off, or pay_off > overdue (Since the credit
 # score slowly improved while starting paying on time. )
 # Bad Credit: pay_off <= overdue
+# Good:1 Bad:0
 def customer(df):
     credit = []
     for i in range(0, len(df)):
@@ -316,18 +281,19 @@ def customer(df):
             else: # ratio < 1.5 is defined as bad credit
                 credit.append(0)
         elif df["pay_off"][i] == 0 and df["no_loan"][i] !=0:
-            if df["sum_overdue"][i] >0: # 
+            if df["sum_overdue"][i] >0: # bad
                 credit.append(0)
             else:
                 credit.append(1)
     df["credit"] = credit
     return df
 #%%
-df_m = customer(df_r)
+df_m = df_r.copy()
+df_m = customer(df_m)
 #%%
 # Drop Unwanted Columns
-a = [11, 12, 13, 14, 15, 16, 17, 18, 19]
-df_m.drop(df_r.columns[a], axis = 1, inplace = True)
+a = [12, 13, 14, 15, 16, 17, 18, 19, 20]
+df_m.drop(df_m.columns[a], axis = 1, inplace = True)
 df_m.head()
 # %%
 # ! pip install xgboost
@@ -339,13 +305,14 @@ from xgboost import XGBClassifier
 from xgboost import plot_tree
 #%%
 x = df_m.drop(['credit'], axis=1)
-y = df_m['credit']
+y = df_m[['credit']]
 #%%
 X_train, X_test, y_train, y_test= train_test_split(x, y, test_size=0.2, random_state=1)
 #%%
 xgb_fit = XGBClassifier(max_depth = 10)
 xgb_fit.fit(X_train, y_train)
-print('XGBoost Model Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
+print('XGBoost Model Train Accuracy : ', xgb_fit.score(X_train, y_train)*100, '%')
+print('XGBoost Model Test Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
 
 y_test_pred = xgb_fit.predict(X_test)
 print('\nConfusion matrix :')
@@ -359,24 +326,30 @@ print(classification_report(y_test, y_test_pred))
 pd.DataFrame({'Variable':X_train.columns,'Importance':
         xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
 # %%
-# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
-# fig, ax = plt.subplots(figsize=(200, 250))
-# plot_tree(xgb_fit, ax=ax, rankdir='LR')
-# plt.show()
+os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
+fig, ax = plt.subplots(figsize=(200, 250))
+plot_tree(xgb_fit, ax=ax, rankdir='LR', num_trees = 0)
+plt.show()
 # %%
 # Logistic Regression Model
 from sklearn.linear_model import LogisticRegression
 lr_fit = LogisticRegression()
 lr_fit.fit(X_train,y_train)
-#%%
-print('Logistic Regression Model Accuracy : ', lr_fit.score(X_test, y_test)*100, '%')
 
-y_test_pred2 = lr_fit.predict(X_test)
+#%%
+print('Logistic Regression Train Model Accuracy : ', lr_fit.score(X_train, y_train)*100, '%')
+print('Logistic Regression Test Model Accuracy : ', lr_fit.score(X_test, y_test)*100, '%')
+
+print("cut-off = 0.5")
+cut_off = 0.5
+y_test_pred2 = lr_fit.predict_proba(X_test)
+pred2 =np.where(lr_fit.predict_proba(X_test)[:,1] > cut_off, 1, 0)
+
 print('\nConfusion matrix :')
-print(confusion_matrix(y_test, y_test_pred2))
+print(confusion_matrix(y_test, pred2))
       
 print('\nClassification report:')      
-print(classification_report(y_test, y_test_pred2))
+print(classification_report(y_test, pred2))
 #%%
 # ! pip install scikit-plot
 import scikitplot as skplt
@@ -387,12 +360,15 @@ plt.show()
 ############K-means#######################
 # %%
 # Scale Data
-x_k = x.copy()
-y_k = y.copy()
+df_new = df_r.copy()
+b = [12, 13, 14, 15, 16, 17, 18, 19, 20]
+df_new.drop(df_new.columns[b], axis = 1, inplace = True)
+x_k = df_new.copy()
+y_k = df_m[['credit']].copy()
 from sklearn.preprocessing import StandardScaler
 SS = StandardScaler()
-x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED',
-'sum_overdue']] = SS.fit_transform(x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'sum_overdue']])
+x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'CNT_CHILDREN', 'CNT_FAM_MEMBERS'
+    ]] = SS.fit_transform(x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'CNT_CHILDREN', 'CNT_FAM_MEMBERS']])
 
 # %%
 # PCA
@@ -416,8 +392,8 @@ plt.tight_layout()
 plt.show()
 #%%
 # Applying PCA
-PCA_7 = PCA(n_components=7)
-X_PCA_7 = PCA_7.fit_transform(x_k)
+PCA_8 = PCA(n_components = 8)
+X_PCA_8 = PCA_8.fit_transform(x_k)
 #%%
 #Elbow Method
 from sklearn.cluster import KMeans
@@ -434,7 +410,7 @@ kmeans_kwargs = {
 sse = []
 for k in range(1, 11):
     kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
-    kmeans.fit(X_PCA_7)
+    kmeans.fit(X_PCA_8)
     sse.append(kmeans.inertia_)
 #%%
 
@@ -447,30 +423,49 @@ plt.show()
 # %%
 # K = 2
 kmeans = KMeans(n_clusters= 2)
-label = kmeans.fit_predict(X_PCA_7)
+label = kmeans.fit_predict(X_PCA_8)
 u_labels = np.unique(label)
  
 for i in u_labels:
-    plt.scatter(X_PCA_7[label == i , 0], X_PCA_7[label == i , 1], 
+    plt.scatter(X_PCA_8[label == i , 0], X_PCA_8[label == i , 1], 
     label = i)
 plt.legend()
 plt.show()
 # %%
-# K = 5
-kmeans = KMeans(n_clusters= 5)
-label2 = kmeans.fit_predict(X_PCA_7)
+# K = 3
+kmeans2 = KMeans(n_clusters= 3)
+label2 = kmeans2.fit_predict(X_PCA_8)
 u_labels2 = np.unique(label2)
  
-for i in u_labels2:
-    plt.scatter(X_PCA_7[label2 == i , 0], X_PCA_7[label2 == i , 1], 
-    label = i)
+for j in u_labels2:
+    plt.scatter(X_PCA_8[label2 == j , 0], X_PCA_8[label2 == j ,1], 
+    label = j)
 plt.legend()
 plt.show()
 # %%
-# We will stick with K = 2
+y_k.value_counts()
+#%%
+c1 = (label == 0).sum()
+c2 = (label == 1).sum()
+print(f"number of label 0 is {c1}")
+print(f"number of label 1 is {c2}")
+#%%
+y_label = pd.DataFrame(label, columns = ["credit_label"])
+def swap(df):
+    for i in range(0, len(df)):
+        if df["credit_label"][i] == 0:
+            df["credit_label"][i] = 1
+        else:
+            df["credit_label"][i] = 0
+    return df
+y_label = swap(y_label)
+#%%
+y_label.value_counts()
+#%%
+# We will use K = 2
 print('\nConfusion matrix :')
-print(confusion_matrix(y, label))
+print(confusion_matrix(y_k, y_label))
       
 print('\nClassification report:')      
-print(classification_report(y, label))
+print(classification_report(y_k, y_label))
 # %%
