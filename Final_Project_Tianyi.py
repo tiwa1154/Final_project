@@ -232,7 +232,7 @@ target['ID'] = df.index
 target['pay_off'] = df['pay_off'].values
 target['#_of_overdues'] = df['overdue_1-29'].values+ df['overdue_30-59'].values + df['overdue_60-89'].values +df['overdue_90-119'].values+df['overdue_120-149'].values +df['overdue_over_150'].values
 target['no_loan'] = df['no_loan'].values
-target['good(1) or bad(0)'] = feature_engineering_goodbad(df)
+target['credit'] = feature_engineering_goodbad(df)
 df_merge = cleansed_app.merge(target, how="inner", on="ID")
 df_merge.head(10)
 # df_merge.describe()
@@ -244,7 +244,9 @@ df_merge = df_merge.dropna()
 df_merge.head(5)
 
 #%%
-sns.countplot(x="good(1) or bad(0)", data = df_merge )
+df_merge.credit.str.get_dummies().sum().plot.pie(label='taget', autopct='%1.0f%%')
+
+# sns.countplot(x="good(1) or bad(0)", data = df_merge )
 
 #%%
 # Investigate all the elements whithin each Feature 
