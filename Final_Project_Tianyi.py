@@ -188,20 +188,20 @@ def feature_engineering_goodbad(data):
             # if paid_off >= no_loan or paid_off <= no_loan:
             #     good_or_bad.append('good')
             if paid_off >= 0 or no_loan >= 0:
-                good_or_bad.append('1')
+                good_or_bad.append('good')
         
         elif overall_overdues != 0:
             if paid_off / overall_overdues >= 1.5:
-                good_or_bad.append('1')
+                good_or_bad.append('good')
             else:
-                good_or_bad.append('0')
+                good_or_bad.append('bad')
         
         elif paid_off == 0 and no_loan != 0:
             if overall_overdues > 0:
-                good_or_bad.append('0')
+                good_or_bad.append('bad')
 
         else:
-            good_or_bad.append('0')
+            good_or_bad.append('bad')
                 
         
     return good_or_bad
