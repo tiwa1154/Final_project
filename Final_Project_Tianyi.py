@@ -205,7 +205,7 @@ def feature_engineering_goodbad(data):
                 
         
     return good_or_bad
-# good(1) or bad(0) set to 1 is good client b/c the gap between # of overdues and payoff or no loan is significant, otherwise, good(1) or bad(0) == 0
+# credit set to 1 is good client b/c the gap between # of overdues and payoff or no loan is significant, otherwise, credit == 0
 
 #%%
 
@@ -246,7 +246,7 @@ df_merge.head(5)
 #%%
 df_merge.credit.str.get_dummies().sum().plot.pie(label='taget', autopct='%1.0f%%')
 
-# sns.countplot(x="good(1) or bad(0)", data = df_merge )
+# sns.countplot(x="credit", data = df_merge )
 
 #%%
 # Investigate all the elements whithin each Feature 
@@ -267,26 +267,25 @@ df_merge.isnull().sum()
 df_merge.columns
 
 #%%
-# finding relationships between good(1) or bad(0)(good/bad) and other features
+# finding relationships between credit(good/bad) and other features
 df_merge2 = df_merge[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
        'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'good(1) or bad(0)','OCCUPATION_TYPE','CNT_CHILDREN']]
+       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS', 'credit','OCCUPATION_TYPE','CNT_CHILDREN']]
 # Visualize the data using seaborn Pairplots
-g = sns.pairplot(df_merge2, hue = 'good(1) or bad(0)', diag_kws={'bw': 0.2})
+g = sns.pairplot(df_merge2, hue = 'credit', diag_kws={'bw': 0.2})
 # observe good relationship between total income and pay off, days employed and pay off, age and no loan/pay off, higher income, less # of overdue; older people with no kids, fewer overdue
 
 #%%
 # Investigate all the features by our y
 features = ['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY',
        'AMT_INCOME_TOTAL', 'NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE',
-       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH',
-       'DAYS_EMPLOYED', 'CNT_FAM_MEMBERS',
-       'good(1) or bad(0)','CNT_CHILDREN','OCCUPATION_TYPE']
+       'NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'CNT_FAM_MEMBERS',
+       'credit','CNT_CHILDREN','OCCUPATION_TYPE']
 
 for f in features:
     plt.figure()
-    ax = sns.countplot(x=f, data=df_merge2, hue = 'good(1) or bad(0)', palette="Set1")
+    ax = sns.countplot(x=f, data=df_merge2, hue = 'credit', palette="Set1")
 # More famle than male in general, more applicants own properties and good applicants have fewer property counts. more applicants fall under working catagory, have secondary degree, married, have 2 children. good candidates have higher pay off time and usually pay of within a month. Bad candidates have higher # of overdue.
 
 #%%
@@ -314,8 +313,8 @@ sns.heatmap(df_merge2.corr(), annot=True)
 plt.show()
 #%%
 # Split data
-X = df_merge2.drop(['good(1) or bad(0)'], axis=1)
-y = df_merge2['good(1) or bad(0)'].values 
+X = df_merge2.drop(['credit'], axis=1)
+y = df_merge2['credit'].values 
 print('X shape: {}'.format(np.shape(X)))
 print('y shape: {}'.format(np.shape(y)))
 
@@ -363,8 +362,8 @@ from sklearn.tree import export_graphviz
 import graphviz
 
 dot_data = tree.export_graphviz(dt, out_file=None, 
-    feature_names=df_merge2.drop(['good(1) or bad(0)'], axis=1).columns,    
-    class_names=df_merge2['good(1) or bad(0)'].unique().astype(str),  
+    feature_names=df_merge2.drop(['credit'], axis=1).columns,    
+    class_names=df_merge2['credit'].unique().astype(str),  
     filled=True, rounded=True,  
     special_characters=True)
 graph = graphviz.Source(dot_data)
@@ -372,7 +371,7 @@ graph
 
 #%%
 # Calculating FI
-for i, column in enumerate(df_merge2.drop(['good(1) or bad(0)'], axis=1)):
+for i, column in enumerate(df_merge2.drop(['credit'], axis=1)):
     print('Importance of feature {}:, {:.3f}'.format(column, dt.feature_importances_[i]))
     
     fi = pd.DataFrame({'Variable': [column], 'Feature Importance Score': [dt.feature_importances_[i]]})
@@ -434,20 +433,11 @@ plot_confusion_matrix(cm_norm, classes=rf.classes_)
 # %%
 from sklearn.model_selection import cross_val_score
 from sklearn.metrics import mean_squared_error as MSE 
-# Set n_jobs to -1 in order to exploit all CPU cores in computation
-MSE_CV = - cross_val_score(rf, X_train, y_train, cv= 20, scoring='neg_mean_squared_error')
-rf.fit(X_train, y_train)  # Fit 'rf' to the training set
-y_predict_train = rf.predict(X_train)  # Predict the labels of training set
-y_predict_test = rf.predict(X_test)  # Predict the labels of test set
 
-print('CV RMSE:', MSE_CV.mean()**(0.5) )  #CV MSE 
-print('Training set RMSE:', MSE(y_train, y_predict_train)**(0.5) )   # Training set MSE
-print('Test set RMSE:', MSE(y_test, y_predict_test)**(0.5) )   # Test set MSE 
-print("\nReady to continue.")
 # %%
 rf_cv_acc = cross_val_score(rf, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
-print(f'LR CV accuracy score:',  rf_cv_acc.mean)
+print(f'LR CV accuracy score:',  rf_cv_acc.mean())
 # %%
 dt_cv_acc = cross_val_score(dt, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
-print(f'LR CV accuracy score:  {dt_cv_acc}')
+print(f'LR CV accuracy score:',  dt_cv_acc.mean())
 # %%
