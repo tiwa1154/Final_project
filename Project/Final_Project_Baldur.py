@@ -308,12 +308,33 @@ x = df_m.drop(['credit'], axis=1)
 y = df_m[['credit']]
 #%%
 X_train, X_test, y_train, y_test= train_test_split(x, y, test_size=0.2, random_state=1)
+
+#%%
+max_depth_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+
+train_accuracy = [] 
+test_accuracy = [] 
+for x in max_depth_list:
+    xgbm = XGBClassifier(max_depth = x) 
+    xgbm.fit(X_train,y_train)
+    train_z = xgbm.predict(X_train)
+    test_z = xgbm.predict(X_test)
+    train_accuracy.append(accuracy_score(y_train, train_z))
+    test_accuracy.append(accuracy_score(y_test, test_z))
+
+x = np.arange(len(max_depth_list)) + 1 
+plt.plot(x, train_accuracy, label='Training') 
+plt.plot(x, test_accuracy, label='Testing') 
+plt.xlabel('Maximum Depth') 
+plt.ylabel('Total Accuracy') 
+plt.legend() 
+plt.plot() 
+
 #%%
 xgb_fit = XGBClassifier(max_depth = 10)
 xgb_fit.fit(X_train, y_train)
 print('XGBoost Model Train Accuracy : ', xgb_fit.score(X_train, y_train)*100, '%')
 print('XGBoost Model Test Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
-
 y_test_pred = xgb_fit.predict(X_test)
 print('\nConfusion matrix :')
 print(confusion_matrix(y_test, y_test_pred))
