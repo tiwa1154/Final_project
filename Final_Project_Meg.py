@@ -438,7 +438,15 @@ print("\nReady to continue.")
 
 
 
+##############################################################################################
 
+# Last one is to deal with the STATUS
+# Get sum of over_due
+df["sum_overdue"] = (df["overdue_1-29"] + df_r["overdue_30-59"] 
+                         + df["overdue_60-89"] 
+                         + df["overdue_90-119"]
+                         + df["overdue_120-149"]
+                         + df_r["overdue_over_150"])
 
 
 
