@@ -470,8 +470,9 @@ c2 = (label == 1).sum()
 print(f"number of label 0 is {c1}")
 print(f"number of label 1 is {c2}")
 #%%
+# Run this only once
 y_label = pd.DataFrame(label, columns = ["credit_label"])
-def swap(df):
+def swap(df): # swap labels
     for i in range(0, len(df)):
         if df["credit_label"][i] == 0:
             df["credit_label"][i] = 1
