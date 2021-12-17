@@ -200,7 +200,7 @@ plt.show()
 # more people have no kids have longer debt overdue time
 
 # %%
-df_sub.plot(x=kids, y=debt_sum, kind="bar")
+# df_sub.plot(x=kids, y=debt_sum, kind="bar")
 
 #%%
 df_sub['OCCUPATION_TYPE'].isna().sum()
@@ -344,107 +344,6 @@ df_m = customer(df_r)
 df_r.columns
 # df_m.credit.values
 
-#%%
-#################################################
-#################################################
-#################################################
-#################################################
-
-good = deepcopy(df_m[df_m['credit']==1])
-bad = deepcopy(df_m[df_m['credit']==0])
-
-#%%
-# plot features by cluster
-
-#%%
-g = sns.catplot(x="CODE_GENDER", y="DAYS_BIRTH", hue="credit", palette='mako',
-            data=df_m, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Age by Gender and Credit User Type",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="CODE_GENDER", y="AMT_INCOME_TOTAL", hue="credit", palette='mako',
-            data=df_m, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Income by Gender and Credit User Type",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="CODE_GENDER", y="DAYS_EMPLOYED", hue="credit", palette='mako',
-            data=df_m, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Days Employed by Gender and Credit User Type",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-# g = sns.catplot(x="CODE_GENDER", y="CNT_CHILDREN", hue="credit", palette='mako',
-#             data=df_m, kind="violin", split=True)
-#             # .set_title("Age by Gender and Credit User Type")
-# g.fig.suptitle("Age by Gender and Credit User Type",
-#                   fontsize=12, fontdict={"weight": "bold"})
-
-
-#%%
-#%%
-g = sns.scatterplot(data=df_m, x="DAYS_BIRTH", y="AMT_INCOME_TOTAL", hue = "CODE_GENDER", palette = 'mako').set_title("Credit Users by Income, Age, Gender")
-
-#%%
-sns.violinplot(x="credit", y="AMT_INCOME_TOTAL", data=df_m, palette='mako', ).set_title("Income by Credit User Type")
-
-#%%
-sns.violinplot(x="credit", y="DAYS_BIRTH", data=df_m, palette='mako').set_title("Age by Credit User Type")
-
-#%%
-g = sns.catplot(x="CODE_GENDER", y="AMT_INCOME_TOTAL",
-                hue="credit", col="FLAG_OWN_REALTY", palette='mako',
-                data=df_m, kind="violin", split=True,
-                height=4, aspect=.7);
-
-#%%
-g = sns.catplot(x="CODE_GENDER", y="AMT_INCOME_TOTAL",
-                hue="credit", col="FLAG_OWN_REALTY", palette='mako',
-                data=df_m, kind="violin", split=True,
-                height=4, aspect=.7);
-
-#%%
-#%%
-sns.countplot(x = dfs['NAME_HOUSING_TYPE'], hue = df_m['credit'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
-
-#%%
-sns.countplot(x = dfs['NAME_FAMILY_STATUS'], hue = df_m['credit'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
-
-#%%
-sns.countplot(x = dfs['NAME_EDUCATION_TYPE'], hue = df_m['credit'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
-
-#%%
-sns.countplot(x = dfs['OCCUPATION_TYPE'], hue = df_m['credit'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
-
-# sns.barplot(x = imports['features'], y = imports['importances'], hue = imports['world'])
-
-
-#%%
-# f, axes = plt.subplots(2, 1, figsize=(7, 10))
-sns.violinplot(x="credit", y="AMT_INCOME_TOTAL", data=df_m, ax = axes[0]).set_title("Good")
-# sns.violinplot(x="label_name", y="AMT_INCOME_TOTAL", data=bad, ax = axes[0]).set_title("Bad")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #%%
@@ -452,8 +351,7 @@ sns.violinplot(x="credit", y="AMT_INCOME_TOTAL", data=df_m, ax = axes[0]).set_ti
 #################################################
 #################################################
 #################################################
-import pandas as pd
-import numpy as np
+
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
@@ -461,61 +359,48 @@ from sklearn.decomposition import PCA
 from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
 from statsmodels.stats import weightstats as stests
 from sklearn.model_selection import cross_val_score
 import warnings
-from copy import deepcopy
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
+from sklearn.metrics import accuracy_score
 
-#%%
-# df_m.shape
-# (36457, 22)
-df_m.columns
-df_m.columns['OCCUPATION_TYPE'].isna().sum()
 
 #%%
 ####################################################
 # PREP DATA FOR MODEL
 ####################################################
 
+# choose features
 features = ['AMT_INCOME_TOTAL', 'DAYS_BIRTH','DAYS_EMPLOYED']
 
+# create X and y
 y = df_m['credit']
 X = df_m[df_m.columns.intersection(features)]
 print(X.columns)
-
-#%%
-X.shape
-# (36457, 11)
-y.shape
-# (36457,)
-
-#%%
-# encode x labels
-le = preprocessing.LabelEncoder()
-X = X.apply(le.fit_transform)
+print(X.shape)
+print(y.shape)
 
 #%%
 # separate test and train
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)
 
+# Fit scaler on training set only.
 scaler = StandardScaler()
-# Fit on training set only.
 scaler.fit(X_train)
+
 # Apply transform to both the training set and the test set.
 X_train = scaler.transform(X_train)
 X_test = scaler.transform(X_test)
 
-#%%
-X_train.shape
-# (29165, 11)
-X_test.shape
-# (7292, 11)
+print("X_train shape: ", X_train.shape)
+print("X_test shape: ", X_test.shape)
+print("y_train shape: ", y_train.shape)
+print("y_test shape: ", y_test.shape)
 
 #%%
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn import metrics
+# find ideal k by iterating through a range of k's
 k_range = range(1,20)
 scores = {}
 scores_list = []
@@ -526,58 +411,38 @@ for k in k_range:
     scores[k] = metrics.accuracy_score(y_test, y_pred)
     scores_list.append(metrics.accuracy_score(y_test, y_pred))
 
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-print("\nReady to continue.")
-
-#%%
-import matplotlib.pyplot as plt
-
 plt.plot(k_range, scores_list)
 plt.xlabel('Value of K for KNN')
 plt.ylabel('Testing Accuracy')
-
-#%%
 print(scores)
-#2
+
+print("\nReady to continue.")
 
 #%%
-knn = KNeighborsClassifier(n_neighbors = 2)
-knn.fit(X,y)
-
-#%%
+# ideal k is 2. run model with k = 2
 knn = KNeighborsClassifier(n_neighbors = 2)
 knn.fit(X_train, y_train)
 y_pred = knn.predict(X_test)
-scores[k] = metrics.accuracy_score(y_test, y_pred)
-scores_list.append(metrics.accuracy_score(y_test, y_pred))
 
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
+cm = confusion_matrix(y_test, y_pred)
+cr = classification_report(y_test, y_pred)
+print(cm)
+print(cr)
 
-print("\nReady to continue.")
+ax= plt.subplot()
+sns.heatmap(cm, annot=True, fmt='g', ax=ax);  
 
-#%%
-X_test.shape
-# (7292, 11)
-y_test.shape
-(7292,)
-y_pred.shape
-(7292,)
+# labels, title and ticks
+ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
+ax.set_title('Confusion Matrix'); 
+ax.xaxis.set_ticklabels(['Bad Credit', 'Good Credit']); ax.yaxis.set_ticklabels(['Bad Credit', 'Good Credit'])
+
 
 #%%
-
-#%%
+# investigate model errors
 final = pd.DataFrame(X_test, columns = X.columns)
 final['credit'] = np.array(y_test.tolist())
 final['credit_pred'] = y_pred.tolist()
-# final['gender_cat']
-
-#%%
-X
 
 #%%
 def outcome_bucket(row):
@@ -594,278 +459,29 @@ def outcome_category(row):
 final['outcome_category'] = final.apply(outcome_category, axis=1) 
 
 #%%
-def gender(row):
-    bucket = 'FEMALE' if row['CODE_GENDER'] > 0 else 'MALE'
+def credit_cat(row):
+    bucket = 'BAD CREDIT' if row['credit'] == 0 else 'GOOD CREDIT'
     return bucket
 
-final['gender_category'] = final.apply(gender, axis=1) 
+final['credit_category'] = final.apply(credit_cat, axis=1) 
 
 #%%
-sns.countplot(x = final['outcome'], hue = final['gender_category'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
+sns.violinplot(x="credit_category", y="AMT_INCOME_TOTAL", data=final, palette='mako').set_title("Income by Credit User Type")
 
 #%%
-g = sns.scatterplot(data=final, x="DAYS_BIRTH", y="AMT_INCOME_TOTAL", hue = "outcome_category", palette = 'mako').set_title("Credit Users by Income, Age, Model Outcome")
+sns.violinplot(x="outcome_category", y="AMT_INCOME_TOTAL", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Income and Credit User Type")
 
 #%%
-sns.violinplot(x="credit", y="AMT_INCOME_TOTAL", data=final, palette='mako', ).set_title("Income by Credit User Type")
+sns.violinplot(x="credit_category", y="DAYS_BIRTH", data=final, palette='mako').set_title("Age by Credit User Type")
 
 #%%
-sns.violinplot(x="credit", y="DAYS_BIRTH", data=df_m, palette='mako').set_title("Age by Credit User Type")
+sns.violinplot(x="outcome_category", y="DAYS_BIRTH", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Age and Credit User Type")
 
 #%%
-g = sns.catplot(x="outcome_category", y="AMT_INCOME_TOTAL", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Income by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
+sns.violinplot(x="credit_category", y="DAYS_EMPLOYED", data=final, palette='mako').set_title("Age by Credit User Type")
 
 #%%
-g = sns.catplot(x="outcome_category", y="DAYS_BIRTH", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Age by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="outcome_category", y="DAYS_EMPLOYED", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Days Employed by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="outcome_category", y="DAYS_EMPLOYED", hue="CODE_GENDER", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Days Employed by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#%%
-####################################################
-# MODEL BUILDING
-####################################################
-#%%
-from sklearn.neighbors import KNeighborsClassifier
-knn = KNeighborsClassifier(n_neighbors=7) # instantiate with n value given
-knn.fit(X_train,y_train)
-y_pred = knn.predict(X_test)
-y_prob = knn.predict_proba(X_test)
-print(y_pred)
-print(knn.score(X_test,y_test))
-# 0.6413878222709819
-
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(y_test, y_pred))
-print(classification_report(y_test, y_pred))
-
-print("\nReady to continue.")
-
-#%%
-# K-Nearest-Neighbor KNN 
-# number of neighbors
-mrroger = 7
-
-#%%
-# KNN algorithm
-# Re-do our darta with scale on X
-from sklearn.preprocessing import scale
-xs = pd.DataFrame( scale(X), columns=X.columns )  
-# Note that scale( ) coerce the object from pd.dataframe to np.array  
-# Need to reconstruct the pandas df with column names
-xs.rank = X.rank
-ys = y.copy()  # no need to scale y, but make a true copy / deep copy to be safe
-
-
-####################################################
-# MODEL BUILDING
-####################################################
-#%%
-df_m.shape()
-
-
-
-
-
-####################################################
-# MODEL BUILDING
-####################################################
-
-#%%
-from sklearn.neighbors import KNeighborsClassifier
-knn = KNeighborsClassifier(n_neighbors=mrroger) # instantiate with n value given
-knn.fit(xs,ys)
-y_pred = knn.predict(xs)
-# y_pred = knn.predict_proba(xs)
-print(y_pred)
-print(knn.score(xs,ys))
-# 0.7282552047617742
-
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(ys, y_pred))
-print(classification_report(ys, y_pred))
-
-print("\nReady to continue.")
-
-
-#%%
-# Calculating error for K values between 1 and 20
-error = []
-for i in range(1, 20):
-    knn = KNeighborsClassifier(n_neighbors=i)
-    knn.fit(xs, ys)
-    pred_i = knn.predict(xs)
-    error.append(np.mean(pred_i != ys))
-
-#%%
-plt.figure(figsize=(12, 6))
-plt.plot(range(1, 20), error, color='red', linestyle='dashed', marker='o',
-         markerfacecolor='blue', markersize=10)
-plt.title('Error Rate K Value')
-plt.xlabel('K Value')
-plt.ylabel('Mean Error')
-
-#%%
-# redo model with k = 3 per chart
-mrroger = 3
-from sklearn.neighbors import KNeighborsClassifier
-knn = KNeighborsClassifier(n_neighbors=mrroger) # instantiate with n value given
-knn.fit(xs,ys)
-y_pred = knn.predict(xs)
-# y_pred = knn.predict_proba(xs)
-print(y_pred)
-print(knn.score(xs,ys))
-# 0.7496777024988343
-
-from sklearn.metrics import classification_report, confusion_matrix
-print(confusion_matrix(ys, y_pred))
-print(classification_report(ys, y_pred))
-
-print("\nReady to continue.")
-
-
-####################################################
-# eda
-####################################################
-
-#%%
-final = deepcopy(xs)
-final['credit'] = ys
-final['credit_pred'] = y_pred
-final['gender_cat']
-
-#%%
-def outcome_bucket(row):
-    bucket = 'FP' if row['credit'] == 0 and row['credit_pred'] == 1 else 'TP' if row['credit'] == 1 and row['credit_pred'] == 1 else 'FN' if row['credit'] == 1 and row['credit_pred'] == 0 else 'TN' if row['credit'] == 0 and row['credit_pred'] == 0 else 'unk'
-    return bucket
-
-final['outcome'] = final.apply(outcome_bucket, axis=1) 
-
-#%%
-def outcome_category(row):
-    bucket = 'RIGHT' if row['outcome'] == 'TP' or row['outcome'] == 'TN' else 'WRONG' if row['outcome'] == 'FP' or row['outcome'] == 'FN' else 'unk'
-    return bucket
-
-final['outcome_category'] = final.apply(outcome_category, axis=1) 
-
-#%%
-def gender(row):
-    bucket = 'FEMALE' if row['CODE_GENDER'] > 0 else 'MALE'
-    return bucket
-
-final['gender_category'] = final.apply(gender, axis=1) 
-
-#%%
-sns.countplot(x = final['outcome'], hue = final['gender_category'], orient = 'v', palette='mako').tick_params(axis='x', rotation=45)
-
-#%%
-g = sns.scatterplot(data=final, x="DAYS_BIRTH", y="AMT_INCOME_TOTAL", hue = "outcome_category", palette = 'mako').set_title("Credit Users by Income, Age, Model Outcome")
-
-#%%
-sns.violinplot(x="credit", y="AMT_INCOME_TOTAL", data=final, palette='mako', ).set_title("Income by Credit User Type")
-
-#%%
-sns.violinplot(x="credit", y="DAYS_BIRTH", data=df_m, palette='mako').set_title("Age by Credit User Type")
-
-#%%
-g = sns.catplot(x="outcome_category", y="AMT_INCOME_TOTAL", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Income by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="outcome_category", y="DAYS_BIRTH", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Age by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="outcome_category", y="DAYS_EMPLOYED", hue="gender_category", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Days Employed by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-#%%
-g = sns.catplot(x="outcome_category", y="DAYS_EMPLOYED", hue="CODE_GENDER", palette='mako',
-            data=final, kind="violin", split=True)
-            # .set_title("Age by Gender and Credit User Type")
-g.fig.suptitle("Days Employed by Gender and Model Outcome",
-                  fontsize=12, fontdict={"weight": "bold"})
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#%%
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+sns.violinplot(x="outcome_category", y="DAYS_EMPLOYED", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Age and Credit User Type")
 
 
 
