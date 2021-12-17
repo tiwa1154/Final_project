@@ -151,7 +151,7 @@ df_r["FLAG_OWN_REALTY"] = df_r["FLAG_OWN_REALTY"].apply(ny_convert)
 # For convenience, it is easy to sort marital this way. 
 # No partenership: 0, else 1.
 def marr_convert(m):
-    if m == "Single / not married" or "Separated" or "Widow":
+    if m == "Single / not married" or m == "Separated" or m == "Widow":
         return 0
     else:
         return 1
@@ -178,7 +178,7 @@ def income_convert(income):
 df_r["NAME_INCOME_TYPE"] = df_r["NAME_INCOME_TYPE"].apply(income_convert)
 # %%
 def edu_convert(edu):
-    if edu == "Secondary / secondary special" or "Lower secondary":
+    if edu == "Secondary / secondary special" or edu == "Lower secondary":
         return 0
     elif edu == "Higher education" or "Incomplete higher":
         return 1
@@ -315,3 +315,5 @@ plt.bar(x=importances['Attribute'], height=importances['Importance'], color='#08
 plt.title('Feature importances obtained from coefficients', size=20)
 plt.xticks(rotation='vertical')
 plt.show()
+
+#%%

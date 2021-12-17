@@ -250,7 +250,7 @@ df_r["FLAG_OWN_REALTY"] = df_r["FLAG_OWN_REALTY"].apply(ny_convert)
 # For convenience, it is easy to sort marital this way. 
 # No partenership: 0, else 1.
 def marr_convert(m):
-    if m == "Single / not married" or "Separated" or "Widow":
+    if m == "Single / not married" or m == "Separated" or m == "Widow":
         return 0
     else:
         return 1
@@ -277,9 +277,9 @@ def income_convert(income):
 df_r["NAME_INCOME_TYPE"] = df_r["NAME_INCOME_TYPE"].apply(income_convert)
 # %%
 def edu_convert(edu):
-    if edu == "Secondary / secondary special" or "Lower secondary":
+    if edu == "Secondary / secondary special" or edu == "Lower secondary":
         return 0
-    elif edu == "Higher education" or "Incomplete higher":
+    elif edu == "Higher education" or edu == "Incomplete higher":
         return 1
     else:
         return 2
@@ -483,7 +483,7 @@ sns.violinplot(x="credit_category", y="DAYS_EMPLOYED", data=final, palette='mako
 #%%
 sns.violinplot(x="outcome_category", y="DAYS_EMPLOYED", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Age and Credit User Type")
 
-
+#%%
 
 
 
