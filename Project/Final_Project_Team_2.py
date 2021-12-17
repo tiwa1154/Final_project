@@ -250,7 +250,7 @@ def customer(df):
 #%%
 df_m = customer(df_r)
 #%%
-a = [11, 12, 13, 14, 15, 16, 17, 18, 19]
+a = [12, 13, 14, 15, 16, 17, 18, 19]
 df_m.drop(df_r.columns[a], axis = 1, inplace = True)
 df_m.head()
 
@@ -446,7 +446,7 @@ from sklearn.model_selection import train_test_split
 from sklearn import tree
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.metrics import accuracy_score, confusion_matrix, r2_score
-#%%
+
 #%%
 # Split data
 X = df_merge2.drop(['credit'], axis=1)
@@ -578,4 +578,367 @@ print(f'LR CV accuracy score:',  rf_cv_acc.mean())
 # %%
 dt_cv_acc = cross_val_score(dt, X_train, y_train, cv= 10, scoring='accuracy', n_jobs=-1 )
 print(f'LR CV accuracy score:',  dt_cv_acc.mean())
+# %%[markdown]
+# KNN
+
+#%%
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
+from statsmodels.stats import weightstats as stests
+from sklearn.model_selection import cross_val_score
+import warnings
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn import metrics
+
+#%%
+####################################################
+# PREP DATA FOR MODEL
+####################################################
+
+# choose features
+features = ['AMT_INCOME_TOTAL', 'DAYS_BIRTH','DAYS_EMPLOYED']
+
+# create X and y
+y1 = df_m['credit']
+X1 = df_m[df_m.columns.intersection(features)]
+print(X1.columns)
+print(X1.shape)
+print(y1.shape)
+
+#%%
+# separate test and train
+X_train1, X_test1, y_train1, y_test1 = train_test_split(X1, y1, test_size = 0.20)
+
+# Fit scaler on training set only.
+scaler = StandardScaler()
+scaler.fit(X_train1)
+
+# Apply transform to both the training set and the test set.
+X_train1 = scaler.transform(X_train1)
+X_test1 = scaler.transform(X_test1)
+
+print("X_train shape: ", X_train1.shape)
+print("X_test shape: ", X_test1.shape)
+print("y_train shape: ", y_train1.shape)
+print("y_test shape: ", y_test1.shape)
+
+#%%
+# find ideal k by iterating through a range of k's
+k_range = range(1,20)
+scores = {}
+scores_list = []
+for k in k_range:
+    knn = KNeighborsClassifier(n_neighbors = k)
+    knn.fit(X_train1, y_train1)
+    y_pred1 = knn.predict(X_test1)
+    scores[k] = metrics.accuracy_score(y_test1, y_pred1)
+    scores_list.append(metrics.accuracy_score(y_test1, y_pred1))
+
+plt.plot(k_range, scores_list)
+plt.xlabel('Value of K for KNN')
+plt.ylabel('Testing Accuracy')
+print(scores)
+
+print("\nReady to continue.")
+
+#%%
+# ideal k is 2. run model with k = 2
+knn = KNeighborsClassifier(n_neighbors = 2)
+knn.fit(X_train1, y_train1)
+y_pred1 = knn.predict(X_test1)
+
+cm1 = confusion_matrix(y_test1, y_pred1)
+cr1 = classification_report(y_test1, y_pred1)
+print(cm1)
+print(cr1)
+
+ax= plt.subplot()
+sns.heatmap(cm1, annot=True, fmt='g', ax=ax);  
+
+# labels, title and ticks
+ax.set_xlabel('Predicted labels');ax.set_ylabel('True labels'); 
+ax.set_title('Confusion Matrix'); 
+ax.xaxis.set_ticklabels(['Bad Credit', 'Good Credit']); ax.yaxis.set_ticklabels(['Bad Credit', 'Good Credit'])
+
+
+#%%
+# investigate model errors
+final = pd.DataFrame(X_test1, columns = X1.columns)
+final['credit'] = np.array(y_test1.tolist())
+final['credit_pred'] = y_pred1.tolist()
+
+#%%
+def outcome_bucket(row):
+    bucket = 'FP' if row['credit'] == 0 and row['credit_pred'] == 1 else 'TP' if row['credit'] == 1 and row['credit_pred'] == 1 else 'FN' if row['credit'] == 1 and row['credit_pred'] == 0 else 'TN' if row['credit'] == 0 and row['credit_pred'] == 0 else 'unk'
+    return bucket
+
+final['outcome'] = final.apply(outcome_bucket, axis=1) 
+
+#%%
+def outcome_category(row):
+    bucket = 'RIGHT' if row['outcome'] == 'TP' or row['outcome'] == 'TN' else 'WRONG' if row['outcome'] == 'FP' or row['outcome'] == 'FN' else 'unk'
+    return bucket
+
+final['outcome_category'] = final.apply(outcome_category, axis=1) 
+
+#%%
+def credit_cat(row):
+    bucket = 'BAD CREDIT' if row['credit'] == 0 else 'GOOD CREDIT'
+    return bucket
+
+final['credit_category'] = final.apply(credit_cat, axis=1) 
+
+#%%
+sns.violinplot(x="credit_category", y="AMT_INCOME_TOTAL", data=final, palette='mako').set_title("Income by Credit User Type")
+
+#%%
+sns.violinplot(x="outcome_category", y="AMT_INCOME_TOTAL", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Income and Credit User Type")
+
+#%%
+sns.violinplot(x="credit_category", y="DAYS_BIRTH", data=final, palette='mako').set_title("Age by Credit User Type")
+
+#%%
+sns.violinplot(x="outcome_category", y="DAYS_BIRTH", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Age and Credit User Type")
+
+#%%
+sns.violinplot(x="credit_category", y="DAYS_EMPLOYED", data=final, palette='mako').set_title("Age by Credit User Type")
+
+#%%
+sns.violinplot(x="outcome_category", y="DAYS_EMPLOYED", data=final, palette='mako', hue = "credit_category", split = True).set_title("Model Outcome by Age and Credit User Type")
+
+#%%[markdown]
+# Xgboost
+#%%
+# ! pip install xgboost
+from xgboost import XGBClassifier
+from xgboost import plot_tree
+
+#%%
+#%%
+df_x = df_m.copy()
+x2 = df_x.drop(['credit', 'sum_overdue'], axis=1)
+y2 = df_x[['credit']]
+#%%
+X_train2, X_test2, y_train2, y_test2= train_test_split(x2, y2, test_size=0.2, random_state=1)
+
+#%%
+depth = range(1, 16)
+train_accuracy = [] 
+test_accuracy = [] 
+for i in depth:
+    xgbm = XGBClassifier(max_depth = i) 
+    xgbm.fit(X_train2,y_train2)
+    train_z = xgbm.predict(X_train2)
+    test_z = xgbm.predict(X_test2)
+    train_accuracy.append(accuracy_score(y_train2, train_z))
+    test_accuracy.append(accuracy_score(y_test2, test_z))
+
+i = np.arange(len(depth)) + 1
+plt.plot(i, train_accuracy, label='Training') 
+plt.plot(i, test_accuracy, label='Testing') 
+plt.xlabel('Maximum Depth') 
+plt.ylabel('Total Accuracy') 
+plt.legend() 
+plt.plot() 
+
+#%%
+xgb_fit = XGBClassifier(max_depth = 13)
+xgb_fit.fit(X_train2, y_train2)
+print('XGBoost Model Train Accuracy : ', xgb_fit.score(X_train2, y_train2)*100, '%')
+print('XGBoost Model Test Accuracy : ', xgb_fit.score(X_test2, y_test2)*100, '%')
+y_test_pred2 = xgb_fit.predict(X_test2)
+print('\nConfusion matrix :')
+print(confusion_matrix(y_test2, y_test_pred2))
+      
+print('\nClassification report:')      
+print(classification_report(y_test2, y_test_pred2))
+
+# %%
+# Feature importance (XGBoost)
+pd.DataFrame({'Variable':X_train2.columns,'Importance':
+        xgb_fit.feature_importances_}).sort_values('Importance', ascending=False)
+# %%
+# Tree Plot. Might not work on each device
+# os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz/bin/'
+# fig, ax = plt.subplots(figsize=(200, 250))
+# plot_tree(xgb_fit, ax=ax, rankdir='LR', num_trees = 0)
+# plt.show()
+
+#%%[markdown]
+# Logistice Regression
+
+#%%
+SS = StandardScaler()
+#%%
+x3 = df_m.drop(['credit'], axis=1)
+x3[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CNT_CHILDREN', 'AMT_INCOME_TOTAL','NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE','NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'sum_overdue']] = SS.fit_transform(x3[['CODE_GENDER', 'FLAG_OWN_CAR', 'FLAG_OWN_REALTY', 'CNT_CHILDREN', 'AMT_INCOME_TOTAL','NAME_INCOME_TYPE', 'NAME_EDUCATION_TYPE','NAME_FAMILY_STATUS', 'NAME_HOUSING_TYPE', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'sum_overdue']])
+y3 = df_m['credit']
+#%%
+X_train3, X_test3, y_train3, y_test3= train_test_split(x3, y3, test_size=0.2, random_state=1)
+# %%
+# Logistic Regression Model
+from sklearn.linear_model import LogisticRegression
+logreg = LogisticRegression()
+logreg.fit(X_train3,y_train3)
+y_pred3=logreg.predict(X_test3)
+
+#%%
+from sklearn import metrics
+cnf_matrix = metrics.confusion_matrix(y_test3, y_pred3)
+cnf_matrix
+
+class_names=[0,1] # name  of classes
+fig, ax = plt.subplots()
+tick_marks = np.arange(len(class_names))
+plt.xticks(tick_marks, class_names)
+plt.yticks(tick_marks, class_names)
+
+sns.heatmap(pd.DataFrame(cnf_matrix), annot=True, cmap="YlGnBu" ,fmt='g')
+ax.xaxis.set_label_position("top")
+plt.tight_layout()
+plt.title('Confusion matrix', y=1.1)
+plt.ylabel('Actual label')
+plt.xlabel('Predicted label')
+
+#%%
+# AUC CURVE
+y_pred_proba3 = logreg.predict_proba(X_test3)[::,1]
+fpr, tpr, thresholds = metrics.roc_curve(y_test3,  y_pred_proba3)
+auc = metrics.roc_auc_score(y_test3, y_pred_proba3)
+plt.plot(fpr,tpr,label="data 1, auc="+str(auc))
+plt.legend(loc=4)
+plt.title('ROC Curve')
+plt.show()
+
+#%%
+# FEATURE IMPORTANCE
+model = LogisticRegression()
+model.fit(X_train3, y_train3)
+importances3 = pd.DataFrame(data={
+    'Attribute': X_train3.columns,
+    'Importance': model.coef_[0]
+})
+importances3 = importances3.sort_values(by='Importance', ascending=False)
+
+#%%
+plt.bar(x=importances3['Attribute'], height=importances3['Importance'], color='#087E8B')
+plt.title('Feature importances obtained from coefficients', size=20)
+plt.xticks(rotation='vertical')
+plt.show()
+
+#%%[markdown]
+# K-means
+
+#%%
+df_new = df_m.copy()
+b = [12, 13]
+df_new.drop(df_new.columns[b], axis = 1, inplace = True)
+x_k = df_new.copy()
+y_k = df_m[['credit']].copy()
+SS1 = StandardScaler()
+x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'CNT_CHILDREN', 'CNT_FAM_MEMBERS'
+    ]] = SS1.fit_transform(x_k[['AMT_INCOME_TOTAL', 'DAYS_BIRTH', 'DAYS_EMPLOYED', 'CNT_CHILDREN', 'CNT_FAM_MEMBERS']])
+
+#%%
+# PCA
+from sklearn.decomposition import PCA
+cov_matrix = np.cov(x_k.T) # Find Covariance
+eig_val, eig_vec = np.linalg.eig(cov_matrix) # Find Eigenvalues and Eigenvectors
+tot = np.sum(eig_val)
+exp_var = [(i/tot)*100 for i in sorted(eig_val, reverse = True)]   # explained variance
+tot_var = np.cumsum(exp_var)
+
+#%%
+from matplotlib import style
+style.use('ggplot')
+plt.rcParams['figure.figsize'] = (8,6)
+plt.bar(range(12), exp_var, alpha=0.50, align = 'center', label='Individual Variance Explained')
+plt.step(range(12), tot_var, where ='mid', label='Cumulative Variance Explained')
+plt.ylabel('Explained Variance Ratio')
+plt.xlabel('Principal Components')
+plt.legend(loc='best')
+plt.tight_layout()
+plt.show()
+#%%
+# Applying PCA
+PCA_8 = PCA(n_components = 8)
+X_PCA_8 = PCA_8.fit_transform(x_k)
+#%%
+#Elbow Method
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+kmeans_kwargs = {
+        "init": "random",
+     "n_init": 10,
+     "max_iter": 300,
+     "random_state": 42,
+ }
+
+ # A list holds the SSE values for each k
+sse = []
+for k in range(1, 11):
+    kmeans = KMeans(n_clusters=k, **kmeans_kwargs)
+    kmeans.fit(X_PCA_8)
+    sse.append(kmeans.inertia_)
+#%%
+
+plt.style.use("ggplot")
+plt.plot(range(1, 11), sse)
+plt.xticks(range(1, 11))
+plt.xlabel("Number of Clusters")
+plt.ylabel("SSE")
+plt.show()
+# %%
+# K = 2
+kmeans = KMeans(n_clusters= 2)
+label = kmeans.fit_predict(X_PCA_8)
+u_labels = np.unique(label)
+ 
+for i in u_labels:
+    plt.scatter(X_PCA_8[label == i , 0], X_PCA_8[label == i , 1], 
+    label = i)
+plt.legend()
+plt.show()
+# %%
+# K = 3
+kmeans2 = KMeans(n_clusters= 3)
+label2 = kmeans2.fit_predict(X_PCA_8)
+u_labels2 = np.unique(label2)
+ 
+for j in u_labels2:
+    plt.scatter(X_PCA_8[label2 == j , 0], X_PCA_8[label2 == j ,1], 
+    label = j)
+plt.legend()
+plt.show()
+# %%
+y_k.value_counts()
+#%%
+c1 = (label == 0).sum()
+c2 = (label == 1).sum()
+print(f"number of label 0 is {c1}")
+print(f"number of label 1 is {c2}")
+#%%
+# Run this only once
+y_label = pd.DataFrame(label, columns = ["credit_label"])
+def swap(df): # swap labels
+    for i in range(0, len(df)):
+        if df["credit_label"][i] == 0:
+            df["credit_label"][i] = 1
+        else:
+            df["credit_label"][i] = 0
+    return df
+y_label = swap(y_label)
+#%%
+y_label.value_counts()
+#%%
+# We will use K = 2
+print('\nConfusion matrix :')
+print(confusion_matrix(y_k, y_label))
+      
+print('\nClassification report:')      
+print(classification_report(y_k, y_label))
 # %%
