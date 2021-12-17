@@ -310,11 +310,10 @@ y = df_m[['credit']]
 X_train, X_test, y_train, y_test= train_test_split(x, y, test_size=0.2, random_state=1)
 
 #%%
-max_depth_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-
+depth = range(1, 16)
 train_accuracy = [] 
 test_accuracy = [] 
-for x in max_depth_list:
+for x in depth:
     xgbm = XGBClassifier(max_depth = x) 
     xgbm.fit(X_train,y_train)
     train_z = xgbm.predict(X_train)
@@ -322,7 +321,7 @@ for x in max_depth_list:
     train_accuracy.append(accuracy_score(y_train, train_z))
     test_accuracy.append(accuracy_score(y_test, test_z))
 
-x = np.arange(len(max_depth_list)) + 1 
+x = np.arange(len(depth)) + 1
 plt.plot(x, train_accuracy, label='Training') 
 plt.plot(x, test_accuracy, label='Testing') 
 plt.xlabel('Maximum Depth') 
@@ -331,7 +330,7 @@ plt.legend()
 plt.plot() 
 
 #%%
-xgb_fit = XGBClassifier(max_depth = 10)
+xgb_fit = XGBClassifier(max_depth = 13)
 xgb_fit.fit(X_train, y_train)
 print('XGBoost Model Train Accuracy : ', xgb_fit.score(X_train, y_train)*100, '%')
 print('XGBoost Model Test Accuracy : ', xgb_fit.score(X_test, y_test)*100, '%')
@@ -490,3 +489,5 @@ print(confusion_matrix(y_k, y_label))
 print('\nClassification report:')      
 print(classification_report(y_k, y_label))
 # %%
+
+
